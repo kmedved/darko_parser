@@ -1,0 +1,165 @@
+{
+  "game": {
+    "gameId": "0022400001",
+    "actions": [
+      {
+        "actionNumber": 1,
+        "orderNumber": 1,
+        "period": 1,
+        "clock": "PT12M00.00S",
+        "actionType": "period",
+        "subType": "start",
+        "timeActual": "2024-10-24T23:00:00Z"
+      },
+      {
+        "actionNumber": 2,
+        "orderNumber": 2,
+        "period": 1,
+        "clock": "PT11M55.00S",
+        "actionType": "jumpball",
+        "subType": "center",
+        "teamId": 1610612747,
+        "teamTricode": "LAL",
+        "personId": 2544,
+        "playerName": "LeBron James",
+        "secondaryPersonId": 201143,
+        "secondaryPlayerName": "Paul Millsap",
+        "timeActual": "2024-10-24T23:01:00Z",
+        "score": {
+          "home": 0,
+          "away": 0
+        }
+      },
+      {
+        "actionNumber": 3,
+        "orderNumber": 3,
+        "period": 1,
+        "clock": "PT11M20.00S",
+        "actionType": "3pt",
+        "subType": "jump shot",
+        "teamId": 1610612737,
+        "teamTricode": "ATL",
+        "personId": 201143,
+        "playerName": "Paul Millsap",
+        "assistPersonId": 201939,
+        "secondaryPersonId": 201939,
+        "secondaryPlayerName": "Stephen Curry",
+        "shotResult": "Made",
+        "shotActionNumber": 1,
+        "descriptor": "catch and shoot",
+        "score": {
+          "home": 0,
+          "away": 3
+        }
+      },
+      {
+        "actionNumber": 4,
+        "orderNumber": 4,
+        "period": 1,
+        "clock": "PT10M45.00S",
+        "actionType": "turnover",
+        "subType": "bad pass",
+        "teamId": 1610612747,
+        "teamTricode": "LAL",
+        "personId": 2544,
+        "playerName": "LeBron James",
+        "shotActionNumber": 2,
+        "descriptor": "bad pass",
+        "score": {
+          "home": 0,
+          "away": 3
+        }
+      },
+      {
+        "actionNumber": 5,
+        "orderNumber": 5,
+        "period": 1,
+        "clock": "PT10M45.00S",
+        "actionType": "steal",
+        "teamId": 1610612737,
+        "teamTricode": "ATL",
+        "personId": 201939,
+        "playerName": "Stephen Curry",
+        "shotActionNumber": 2
+      },
+      {
+        "actionNumber": 6,
+        "orderNumber": 6,
+        "period": 1,
+        "clock": "PT10M10.00S",
+        "actionType": "substitution",
+        "teamId": 1610612747,
+        "teamTricode": "LAL",
+        "personId": 2732,
+        "playerName": "Patrick Beverley",
+        "secondaryPersonId": 203076,
+        "secondaryPlayerName": "Dennis Schroder",
+        "score": {
+          "home": 0,
+          "away": 3
+        }
+      },
+      {
+        "actionNumber": 7,
+        "orderNumber": 7,
+        "period": 1,
+        "clock": "PT09M30.00S",
+        "actionType": "2pt",
+        "subType": "layup",
+        "teamId": 1610612747,
+        "teamTricode": "LAL",
+        "personId": 203076,
+        "playerName": "Dennis Schroder",
+        "shotResult": "Missed",
+        "shotActionNumber": 3,
+        "score": {
+          "home": 0,
+          "away": 3
+        }
+      },
+      {
+        "actionNumber": 8,
+        "orderNumber": 8,
+        "period": 1,
+        "clock": "PT09M30.00S",
+        "actionType": "block",
+        "teamId": 1610612737,
+        "teamTricode": "ATL",
+        "personId": 201143,
+        "playerName": "Paul Millsap",
+        "shotActionNumber": 3
+      },
+      {
+        "actionNumber": 9,
+        "orderNumber": 9,
+        "period": 1,
+        "clock": "PT09M00.00S",
+        "actionType": "freethrow",
+        "subType": "technical",
+        "teamId": 1610612747,
+        "teamTricode": "LAL",
+        "personId": 2544,
+        "playerName": "LeBron James",
+        "shotResult": "Made",
+        "shotActionNumber": 3,
+        "descriptor": "technical free throw",
+        "score": {
+          "home": 1,
+          "away": 3
+        }
+      },
+      {
+        "actionNumber": 10,
+        "orderNumber": 10,
+        "period": 1,
+        "clock": "PT00M00.00S",
+        "actionType": "period",
+        "subType": "end",
+        "score": {
+          "home": 22,
+          "away": 28
+        }
+      }
+    ]
+  }
+}

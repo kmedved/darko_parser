@@ -1,0 +1,17 @@
+# Example mapping template
+- actionType: turnover
+  signatures:
+    - signature:
+        subType: lost ball
+        descriptor:
+        qualifiers: []
+      map_to_event_name: lost ball
+      map_to_msg_action: 2   # aligns with your TO_CODES
+- actionType: foul
+  signatures:
+    - signature:
+        subType: take
+        descriptor:
+        qualifiers: []
+      map_to_event_name: take
+      map_to_msg_action: 19  # aligns with your FOUL_CODES

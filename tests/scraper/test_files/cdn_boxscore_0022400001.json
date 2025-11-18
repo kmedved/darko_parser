@@ -1,0 +1,62 @@
+{
+  "game": {
+    "gameId": "0022400001",
+    "gameTimeUTC": "2024-10-24",
+    "homeTeam": {
+      "teamId": 1610612747,
+      "teamTricode": "LAL",
+      "score": 1,
+      "statistics": {
+        "points": 1,
+        "fieldGoalsMade": 0,
+        "fieldGoalsAttempted": 1,
+        "threePointersMade": 0,
+        "threePointersAttempted": 0,
+        "freeThrowsMade": 1,
+        "freeThrowsAttempted": 1,
+        "reboundsTotal": 0,
+        "assists": 0,
+        "steals": 0,
+        "blocks": 0,
+        "turnovers": 1
+      },
+      "players": [
+        {"personId": 2544, "firstName": "LeBron", "lastName": "James", "starter": true, "starterPosition": "F", "status": "ACTIVE"},
+        {"personId": 2732, "firstName": "Patrick", "lastName": "Beverley", "starter": true, "starterPosition": "G", "status": "ACTIVE"},
+        {"personId": 203076, "firstName": "Dennis", "lastName": "Schroder", "starter": true, "starterPosition": "G", "status": "ACTIVE"},
+        {"personId": 201566, "firstName": "Marc", "lastName": "Gasol", "starter": true, "starterPosition": "C", "status": "ACTIVE"},
+        {"personId": 1629029, "firstName": "Austin", "lastName": "Reaves", "starter": true, "starterPosition": "G", "status": "ACTIVE"},
+        {"personId": 2733, "firstName": "Jared", "lastName": "Dudley", "status": "ACTIVE"},
+        {"personId": 203210, "firstName": "Kentavious", "lastName": "Caldwell-Pope", "status": "ACTIVE"}
+      ]
+    },
+    "awayTeam": {
+      "teamId": 1610612737,
+      "teamTricode": "ATL",
+      "score": 3,
+      "statistics": {
+        "points": 3,
+        "fieldGoalsMade": 1,
+        "fieldGoalsAttempted": 1,
+        "threePointersMade": 1,
+        "threePointersAttempted": 1,
+        "freeThrowsMade": 0,
+        "freeThrowsAttempted": 0,
+        "reboundsTotal": 0,
+        "assists": 1,
+        "steals": 1,
+        "blocks": 1,
+        "turnovers": 0
+      },
+      "players": [
+        {"personId": 201143, "firstName": "Paul", "lastName": "Millsap", "starter": true, "starterPosition": "F", "status": "ACTIVE"},
+        {"personId": 201939, "firstName": "Stephen", "lastName": "Curry", "starter": true, "starterPosition": "G", "status": "ACTIVE"},
+        {"personId": 203114, "firstName": "Klay", "lastName": "Thompson", "starter": true, "starterPosition": "G", "status": "ACTIVE"},
+        {"personId": 202691, "firstName": "Draymond", "lastName": "Green", "starter": true, "starterPosition": "F", "status": "ACTIVE"},
+        {"personId": 203552, "firstName": "Andrew", "lastName": "Wiggins", "starter": true, "starterPosition": "F", "status": "ACTIVE"},
+        {"personId": 1628369, "firstName": "Kevon", "lastName": "Looney", "status": "ACTIVE"},
+        {"personId": 1629651, "firstName": "Jordan", "lastName": "Poole", "status": "ACTIVE"}
+      ]
+    }
+  }
+}

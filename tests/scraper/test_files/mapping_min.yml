@@ -1,0 +1,15 @@
+# Minimal overrides to exercise YAML fallback logic in tests
+- actionType: turnover
+  signatures:
+    - signature:
+        subType: bad pass
+        descriptor: bad pass
+        qualifiers: []
+      map_to_event_name: lost ball
+      map_to_msg_action: 2
+    - signature:
+        subType: "simmons bad pass turnover (1 to) steal: leonard"
+        descriptor: "simmons bad pass turnover (1 to) steal: leonard"
+        qualifiers: []
+      map_to_event_name: lost ball
+      map_to_msg_action: 2

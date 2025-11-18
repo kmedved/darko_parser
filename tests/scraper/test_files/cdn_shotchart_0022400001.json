@@ -1,0 +1,21 @@
+{
+  "gameId": "0022400001",
+  "shots": [
+    {
+      "gameEventId": 3,
+      "teamId": 1610612737,
+      "playerId": 201143,
+      "x": 5.5,
+      "y": 71.25,
+      "shotDistance": 25.0
+    },
+    {
+      "gameEventId": 7,
+      "teamId": 1610612747,
+      "playerId": 203076,
+      "x": 83.75,
+      "y": 12.5,
+      "shotDistance": 3.0
+    }
+  ]
+}
