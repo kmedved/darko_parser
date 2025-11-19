@@ -214,6 +214,15 @@ analytics stack, a SQL warehouse or the built-in stats helpers under
 Because CDN and v2 sources both map onto the same schema you can mix seasons and
 data sources without any post-processing.
 
+### Stats helper outputs
+
+The `nba_scraper.stats.PbP.player_box_glossary()` helper emits one row per
+player **plus** a `Player_Team == "TOTAL"` aggregation row for each team by
+default. For these TOTAL rows, identifier fields like `player_id`, `PlayerID`
+and `NbaDotComID` are set equal to `team_id` to give the aggregate rows stable
+join keys; they do **not** represent personIds. Filter on `Player_Team !=
+"TOTAL"` when you only want player-level stats.
+
 # Maintainer & contact
 
 `nba_scraper` was founded by Matthew Barlowe, and the project will always be grateful for the groundwork he laid. Day-to-day maintenance now happens under Kostya Medvedovsky (@kmedved on Twitter, creator of DARKO).

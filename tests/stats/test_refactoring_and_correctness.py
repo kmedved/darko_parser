@@ -59,9 +59,33 @@ def test_decoupling_from_pbg_stats(pbp_v2_game):
 
     # This test file doesn't have a zero-stat player, but we confirm
     # that the number of players matches the number with non-zero minutes.
-    players_in_box = len(box)
-    players_with_minutes = len(box[box["Minutes"] > 0])
+    player_rows = box[box["Player_Team"] != "TOTAL"]
+
+    players_in_box = len(player_rows)
+    players_with_minutes = len(player_rows[player_rows["Minutes"] > 0])
     assert players_in_box == players_with_minutes
+
+
+def test_team_totals_appended_by_default(pbp_v2_game):
+    box = pbp_v2_game.player_box_glossary()
+
+    totals = box[box["Player_Team"] == "TOTAL"]
+    player_rows = box[box["Player_Team"] != "TOTAL"]
+
+    assert len(totals) == 2
+
+    # Team identifiers should mirror the team_id
+    assert (totals["player_id"] == totals["team_id"]).all()
+    assert (totals["NbaDotComID"] == totals["team_id"]).all()
+    assert (totals["PlayerID"] == totals["team_id"]).all()
+    assert (totals["PlayerSeasonID"] == totals["team_id"]).all()
+
+    for team_id, total_row in totals.groupby("team_id"):
+        team_players = player_rows[player_rows["team_id"] == team_id]
+
+        assert pytest.approx(team_players["Minutes"].sum()) == total_row["Minutes"].iloc[0]
+        assert pytest.approx(team_players["PTS"].sum()) == total_row["PTS"].iloc[0]
+        assert pytest.approx(team_players["TOV"].sum()) == total_row["TOV"].iloc[0]
 
 
 def test_vectorized_helpers_match_row_wise():
@@ -143,9 +167,14 @@ def test_player_box_glossary_cdn_game(cdn_0021900151_df):
     pbp = PbP(cdn_0021900151_df)
     box = pbp.player_box_glossary()
 
+    player_rows = box[box["Player_Team"] != "TOTAL"]
+    totals = box[box["Player_Team"] == "TOTAL"]
+
+    assert len(totals) == 2
+
     # Minutes sanity: each team should be ~game_minutes * 5
     total_minutes = cdn_0021900151_df["seconds_elapsed"].max() / 60.0
-    team_minutes = box.groupby("team_id")["Minutes"].sum()
+    team_minutes = player_rows.groupby("team_id")["Minutes"].sum()
     for minutes in team_minutes:
         assert abs(minutes - total_minutes * 5.0) < 1.0
 
@@ -163,9 +192,9 @@ def test_player_box_glossary_cdn_game(cdn_0021900151_df):
     assert team_points_map, "Fixture should include at least one scoring team"
 
     for team_id, pts_for in team_points_map.items():
-        on_for = box.loc[box["team_id"] == team_id, "OnCourt_Team_Points"].sum()
+        on_for = player_rows.loc[player_rows["team_id"] == team_id, "OnCourt_Team_Points"].sum()
         opp_pts = sum(p for t, p in team_points_map.items() if t != team_id)
-        on_against = box.loc[box["team_id"] == team_id, "OnCourt_Opp_Points"].sum()
+        on_against = player_rows.loc[player_rows["team_id"] == team_id, "OnCourt_Opp_Points"].sum()
 
         assert abs(on_for - pts_for * 5.0) < 1e-6
         assert abs(on_against - opp_pts * 5.0) < 1e-6
