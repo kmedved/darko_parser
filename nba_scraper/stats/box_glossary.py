@@ -480,12 +480,11 @@ def annotate_events(df: pd.DataFrame) -> pd.DataFrame:
     df["def_team_id"] = np.where(home_match, df["away_team_id"], df["home_team_id"])
     df.loc[~off_mask, "def_team_id"] = np.nan
 
-    # Ensure Technical FTs don't count as end-of-trip attempts (dead balls; no rebounds).
-    # Restrict to actual FT rows while leveraging the broader `is_technical` flag
-    # (which also captures action-type encodings) so we don't miss techs without
-    # a subtype string.
-    is_tech_ft = df["is_ft"] & df["is_technical"]
-    df["is_last_ft"] = df["is_last_ft"] & ~is_tech_ft
+    # Ensure technical free throws don't create rebound opportunities:
+    # detect them via FT subtype text rather than foul-family flags.
+    # Technical FTs are dead-ball events; there should be no rebound chance.
+    tech_ft_mask = df["is_ft"] & sub_lower.str.contains("technical")
+    df["is_last_ft"] = df["is_last_ft"] & ~tech_ft_mask
 
     return df
 
