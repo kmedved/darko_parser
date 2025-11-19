@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-import nba_parser as npar
+from nba_scraper.stats import PbP
 
 
 @pytest.fixture(scope="session")
@@ -33,7 +33,7 @@ def setup():
         ]:
             if col in pbp_df.columns:
                 pbp_df[col] = pd.to_numeric(pbp_df[col], errors="coerce").fillna(0).astype(int)
-    pbp_dfs = [npar.PbP(pbp_df) for pbp_df in pbp_dfs]
+    pbp_dfs = [PbP(pbp_df) for pbp_df in pbp_dfs]
     pbg_dfs = [pbp_df.playerbygamestats() for pbp_df in pbp_dfs]
     tbg_dfs = [pbp_df.teambygamestats() for pbp_df in pbp_dfs]
 

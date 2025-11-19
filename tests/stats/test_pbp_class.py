@@ -1,4 +1,4 @@
-from nba_parser import PbP
+from nba_scraper.stats import PbP
 import pandas as pd
 import pytest
 
