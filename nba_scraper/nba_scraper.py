@@ -8,7 +8,7 @@ from typing import Iterable, List, Sequence
 import pandas as pd
 
 from . import helper_functions as hf
-from . import io_sources, scrape_functions
+from . import io_sources
 
 
 def check_format(data_format: str) -> None:
@@ -40,7 +40,7 @@ def scrape_game(game_ids: Iterable[str], data_format: str = "pandas", data_dir: 
     mapping = os.getenv("NBA_SCRAPER_MAP")
     frames: List[pd.DataFrame] = []
     for gid in game_ids:
-        frames.append(scrape_functions.main_scrape(str(gid), mapping))
+        frames.append(io_sources.parse_any(str(gid), io_sources.SourceKind.CDN_REMOTE, mapping))
     return _concat_or_write(frames, data_format, data_dir)
 
 
