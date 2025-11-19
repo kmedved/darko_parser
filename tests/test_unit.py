@@ -102,6 +102,80 @@ def test_cdn_game_date_normalized():
     assert len(val) == 10
 
 
+def test_cdn_possession_tokens_map_to_team_ids():
+    home = 101
+    away = 202
+
+    pbp = {
+        "game": {
+            "gameId": "test",
+            "actions": [
+                {
+                    "actionNumber": 1,
+                    "orderNumber": 1,
+                    "period": 1,
+                    "clock": "PT12M00.00S",
+                    "actionType": "jumpball",
+                    "subType": "center",
+                    "teamId": home,
+                    "teamTricode": "HOM",
+                    "possession": "home",
+                    "score": {"home": 0, "away": 0},
+                },
+                {
+                    "actionNumber": 2,
+                    "orderNumber": 2,
+                    "period": 1,
+                    "clock": "PT11M59.00S",
+                    "actionType": "rebound",
+                    "subType": "defensive",
+                    "teamId": away,
+                    "teamTricode": "AWY",
+                    "personId": 20,
+                    "possession": "AWY",
+                },
+                {
+                    "actionNumber": 3,
+                    "orderNumber": 3,
+                    "period": 1,
+                    "clock": "PT11M50.00S",
+                    "actionType": "timeout",
+                    "subType": "full",
+                    "teamId": away,
+                    "teamTricode": "AWY",
+                    "possession": str(away),
+                },
+            ],
+        }
+    }
+
+    box = {
+        "game": {
+            "gameId": "test",
+            "gameTimeUTC": "2024-01-01T00:00:00Z",
+            "homeTeam": {
+                "teamId": home,
+                "teamTricode": "HOM",
+                "players": [{"personId": 10, "status": "ACTIVE"}],
+            },
+            "awayTeam": {
+                "teamId": away,
+                "teamTricode": "AWY",
+                "players": [{"personId": 20, "status": "ACTIVE"}],
+            },
+        }
+    }
+
+    df = cdn_parser.parse_actions_to_rows(pbp, box)
+    df = df.sort_values("action_number")
+
+    assert list(df["possession_after"])[:3] == [home, away, away]
+    assert (
+        cdn_parser._possession_team_id({}, home, away, "HOM", "AWY")
+        is None
+    )
+
+
 def test_eventnum_is_numeric():
     v2 = _load_json("v2_pbp_0021700001.json")
     df2 = v2_parser.parse_v2_to_rows(v2)
