@@ -176,7 +176,9 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
     live_mask = ~df["event_type_de"].isin(["period", "timeout"])
 
     poss_live = poss_new.where(live_mask)
+    poss_live = poss_live.mask(poss_live == 0)
     poss_live = poss_live.groupby([df["game_id"], df["period"]]).ffill().bfill()
+    poss_live = poss_live.fillna(0).astype("Int64")
 
     df["possession_after"] = poss_new.where(~live_mask, poss_live)
     return df

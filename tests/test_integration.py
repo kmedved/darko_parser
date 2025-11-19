@@ -37,9 +37,11 @@ def test_scrape_game_concat(monkeypatch):
 
     def fake_parse_any(ref, kind, mapping_yaml_path=None):
         if kind == io_sources.SourceKind.CDN_REMOTE:
+            # For the first game id ("0022400001"), return the CDN fixture.
+            # For the synthetic "V2" id, route through the v2-local parser.
+            if str(ref) == "V2":
+                return original_parse_any(v2, io_sources.SourceKind.V2_LOCAL)
             return original_parse_any((pbp, box), io_sources.SourceKind.CDN_LOCAL)
-        if kind == io_sources.SourceKind.V2_DICT:
-            return original_parse_any(v2, io_sources.SourceKind.V2_LOCAL)
         return original_parse_any(ref, kind, mapping_yaml_path)
 
     monkeypatch.setattr(io_sources, "parse_any", fake_parse_any)

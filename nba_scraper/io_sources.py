@@ -21,12 +21,9 @@ class SourceKind(str, Enum):
     CDN_REMOTE = "cdn_remote"
     CDN_LOCAL = "cdn_local"
     V2_LOCAL = "v2_local"
-    V2_DICT = "v2_dict"
 
 
-def load_json(path_or_dict: Union[str, Path, Dict[str, Any]], kind: SourceKind) -> Dict[str, Any]:
-    if kind == SourceKind.V2_DICT and isinstance(path_or_dict, dict):
-        return path_or_dict
+def load_json(path_or_dict: Union[str, Path], kind: SourceKind) -> Dict[str, Any]:
     if kind in {SourceKind.CDN_LOCAL, SourceKind.V2_LOCAL}:
         path = Path(path_or_dict)
         with path.open("r", encoding="utf-8") as fp:
@@ -200,12 +197,6 @@ def parse_any(
             raise TypeError("V2_LOCAL requires a path")
         v2_json = load_json(game_ref, SourceKind.V2_LOCAL)
         df = v2_parser.parse_v2_to_rows(v2_json, mapping_yaml_path)
-        return lineup_builder.attach_lineups(df)
-
-    if kind == SourceKind.V2_DICT:
-        if not isinstance(game_ref, dict):
-            raise TypeError("V2_DICT requires a dictionary")
-        df = v2_parser.parse_v2_to_rows(game_ref, mapping_yaml_path)
         return lineup_builder.attach_lineups(df)
 
     raise ValueError(f"Unsupported source kind: {kind}")
