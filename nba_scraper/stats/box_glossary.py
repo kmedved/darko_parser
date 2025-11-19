@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .pbp import PbP
 
 import re
 
@@ -815,7 +818,7 @@ def _build_canonical_team_map(df: pd.DataFrame) -> Dict[int, int]:
     return dict(zip(canonical["player_id"], canonical["team_id"]))
 
 
-def compute_on_court_exposures(pbp: "PbP", df: pd.DataFrame) -> pd.DataFrame:
+def compute_on_court_exposures(pbp: PbP, df: pd.DataFrame) -> pd.DataFrame:
     exposures: Dict[tuple, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
 
     canonical_map = _build_canonical_team_map(df)
