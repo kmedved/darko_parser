@@ -1,9 +1,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Maintenance](https://img.shields.io/maintenance/yes/2024)](https://github.com/mcbarlowe/nba_scraper/commits/master)
-[![PyPI version](https://badge.fury.io/py/nba-scraper.svg)](https://badge.fury.io/py/nba-scraper)
+[![Last Commit](https://img.shields.io/github/last-commit/kmedved/darko_parser)](https://github.com/kmedved/darko_parser/commits)
+[![PyPI version](https://img.shields.io/pypi/v/nba-scraper)](https://pypi.org/project/nba-scraper/)
 [![Downloads](https://pepy.tech/badge/nba-scraper)](https://pepy.tech/project/nba-scraper)
-[![Build Status](https://travis-ci.org/mcbarlowe/nba_scraper.svg?branch=master)](https://travis-ci.org/mcbarlowe/nba_scraper)
-[![codecov](https://codecov.io/gh/mcbarlowe/nba_scraper/branch/master/graph/badge.svg)](https://codecov.io/gh/mcbarlowe/nba_scraper)
 
 # This project is actively maintained and now supports both legacy v2 and CDN (live data) endpoints out of the box.
 
