@@ -19,6 +19,3 @@ six==1.12.0
 urllib3==1.26.5
 
 pyyaml==5.3.1
-
-# Use the latest upstream nba_parser implementation from the default branch.
-nba_parser @ git+https://github.com/kmedved/nba_parser@master

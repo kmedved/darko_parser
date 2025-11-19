@@ -14,7 +14,6 @@ This section documents every tracked file in the repository so downstream LLM ag
 * `LICENSE` – GPLv3 license text for the project.
 * `requirements.txt` – Runtime dependencies pinned for the package (numpy, pandas, requests, etc.).
 * `setup.py` / `setup.cfg` / `MANIFEST.in` – Packaging configuration for PyPI distribution and included data files.
-* `get_api_calls.py` – Obsolete stub raising a `RuntimeError` to redirect users to the public scraping API.
 
 ### Core package (`nba_scraper/`)
 * `__init__.py` – Re-exports the primary scraping helpers (`scrape_game`, `scrape_season`, `scrape_date_range`, `scrape_from_files`).
@@ -29,7 +28,6 @@ This section documents every tracked file in the repository so downstream LLM ag
 * `lineup_builder.py` – Lineup reconstruction utilities: seeds starters from box scores, processes substitution events (CDN and v2 semantics), tracks on-court player IDs/names, and backfills lineup columns per event.
 * `coords_backfill.py` – Merges shot chart data into parsed play-by-play frames, replacing synthesized/missing coordinates and cleaning style flags.
 * `boxscore_validation.py` – Computes team totals from canonical PbP, compares against official box scores, and provides logging helpers plus field constant tuples.
-* `stat_calc_functions.py` – Small vectorized helpers for downstream stat calculations (shot made flag, foul/shot subtype parsing, points/seconds extraction).
 * `helper_functions.py` – See above; located in core package to support scraping flows.
 * `schema.py` – Canonical column ordering, event type labels, and simple numeric helpers (`int_or_zero`, `scoremargin_str`, `points_made_from_family`).
 
@@ -50,13 +48,12 @@ This section documents every tracked file in the repository so downstream LLM ag
 * `test_mapping_overrides.py` – Ensures YAML mapping overrides remap event families/action codes as expected for CDN and v2 inputs.
 * `test_teamtotals_ft_metrics.py` – Checks free-throw trip metadata and team total calculations for correctness.
 * `test_unit.py` – Unit-level coverage for helper utilities (time parsing, possession inference, shot coordinate synthesis, etc.).
-* `test_with_parser.py` – Validates interactions with the external `nba_parser` package using canonical dataframe outputs.
 * Fixture files under `tests/test_files/` – Frozen CDN/v2 JSON payloads and minimal YAML mapping used by the test suite (`cdn_playbyplay_0022400001.json`, `cdn_boxscore_0022400001.json`, `cdn_shotchart_0022400001.json`, `v2_pbp_0021700001.json`, `mapping_min.yml`).
 
 ### Project data and misc
 * `requirements.txt` – Dependency pins used for installation/testing.
 * `setup.cfg` / `setup.py` / `MANIFEST.in` – Packaging metadata, pytest config, lint settings, and included files for distribution.
-* `scripts/` and `get_api_calls.py` – See entries above; `get_api_calls.py` intentionally errors to redirect users to supported APIs.
+* `scripts/` – See entry above.
 
 ## How `nba_scraper.stats` Works
 The parsing logic has been merged into this repository under `nba_scraper/stats/`.
