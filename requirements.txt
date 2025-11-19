@@ -1,32 +1,6 @@
-atomicwrites>=1.4.1
-attrs>=23.1.0
-certifi>=2024.2.2
-chardet>=5.2.0
-codecov>=2.1.13
-coverage>=7.4.0
-idna>=3.6
-more-itertools>=10.2.0
-
-#Numpy 1.26+ is required for Python 3.12 compatibility
-
-numpy>=1.26.4
-
-#Pandas 2.2+ is required for Python 3.12 compatibility
-
-pandas>=2.2.0
-pluggy>=1.4.0
-py>=1.11.0
-
-#Pytest 4.x does not work on Py3.12; updated to stable 8.x
-
-pytest>=8.0.0
-pytest-cov>=4.1.0
-python-dateutil>=2.8.2
-pytz>=2024.1
-requests>=2.31.0
-six>=1.16.0
-urllib3>=2.2.0
-
-#PyYAML 6.0+ is required for modern Cython/Build envs
-
-pyyaml>=6.0.1
+# Developer environment for darko_parser.
+# Usage:
+#   pip install -r requirements.txt
+#
+# This installs the package in editable mode plus dev/test tooling.
+-e .[dev]
