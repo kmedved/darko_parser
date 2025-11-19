@@ -481,7 +481,11 @@ def annotate_events(df: pd.DataFrame) -> pd.DataFrame:
     df.loc[~off_mask, "def_team_id"] = np.nan
 
     # Ensure Technical FTs don't count as end-of-trip attempts (dead balls; no rebounds).
-    df["is_last_ft"] = df["is_last_ft"] & ~df["is_technical"]
+    # Restrict to actual FT rows while leveraging the broader `is_technical` flag
+    # (which also captures action-type encodings) so we don't miss techs without
+    # a subtype string.
+    is_tech_ft = df["is_ft"] & df["is_technical"]
+    df["is_last_ft"] = df["is_last_ft"] & ~is_tech_ft
 
     return df
 
