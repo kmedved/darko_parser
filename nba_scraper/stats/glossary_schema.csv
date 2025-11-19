@@ -1,189 +1,248 @@
 Column,Type,Example,Definition
-Date,string,45223,Game date
-NbaDotComID,int,894,NBA.com `personId` for the player.
-Team_SingleGame,int,1610612747,Numeric NBA franchise ID for this team in this specific game (matches NBA.com `teamId`).
-Game_SingleGame,int,29600072,"Game identifier in your single?game export (e.g., NBA.com gameId or a mapped equivalent). Does not include leading 00s."
-FullName,string,Ricky Pierce 894,Player’s full name as stored in the file
-Player_Team,string,Ricky Pierce 894,Label used for the player+team combo in this export
-Year,int,1997,"Season year associated with this game/row in your dataset (e.g., 1997 for the 1996?97 season)."
-Position,string,G,"Player’s listed position (e.g., `G`, `F`, `C`, `F-C`, etc.)."
-Source,string,playbyplayv2,Whether the source is playbyplayv2 or CDN
-G,int,1,"Games played in the sample context (for a single?game file this is typically 1 for active players, 0 for pure DNP/inactive rows)."
-Inactive,int,0,"Flag or count for games where the player was inactive (1 in this game if listed inactive, else 0)."
-DNP,int,0,Did Not Play in this game (any reason).
-Starts,int,0,1 if the player started the game; 0 otherwise.
-POSS,int,76,Always equal to POSS_OFF + POSS_DEF
-POSS_OFF,int,38,Team offensive possessions when the player is on the court
-POSS_DEF,int,38,Team defensive possessions when the player is on the court
-MPG,float,21.22,Minutes played in this game (or minutes per game in an aggregate table). In the sample single?game file this is the in?game minutes.
-Minutes,float,21.22,Raw minutes played in the game (may match `MPG` in single?game exports).
-Pace,float,85.97,Pace while player was on court scaled to 48 minutes. (2880 / (Minutes*60 / POSS)) / 2
-TSAttempts,float,4.88,True?shooting attempts. Calculation is fg2a + fg3a + (fta - technical_free_throw_trips - x2pt_and_1_free_throw_trips - x3pt_and_1_free_throw_trips)/2
-TSpct,float,0.7172,True Shooting %: `PTS / (2 * TSAttempts)`.
-PossessionsUsed,float,5,"Estimate of possessions **finished** by the player (using FGA, FTA, TOV, etc.)"
-USG,float,0.1316,"Usage rate – share of team offensive possessions while on floor that end with this player’s FGA, FTA, or TOV."
-PTS,int,7,Total points scored by the player in this game.
-PTS_100p,float,30.19,Points per 100 **team offensive possessions** while this player is on the floor: `PTS / POSS_OFF * 100`.
-PPG,float,0,Points scored this game
-ORBpct,float,0.1316,Offensive rebound percentage – estimate of share of available offensive rebounds the player grabs while on court.
-OREB_100p,float,18.42,"Offensive rebounds per 100 **team offensive possessions** while this player is on court (denominator is your team?offense possession estimator, not necessarily `POSS_OFF`)."
-OREBPct_FGA,float,0,Offensive rebound percentage on field goal attempts
-OREB_FGA_100p,float,0,Offensive rebounds per 100 **team offensive possessions** while this player is on court
-OREBPct_FT,float,0,Offensive rebound percentage on free throw attempts
-OREB_FT_100p,float,0,Offensive rebounds on free throw attempts per 100 **team offensive possessions** while this player is on court
-OREB,int,7,Offensive rebounds credited to the player.
-OREB_FGA,float,7,Offensive rebounds credited to the player that came from a missed field goal
-OREB_FT,float,0,Offensive rebounds credited to the player that came from a missed free throw
-DRBPct,float,0,Defensive rebound percentage – share of available defensive rebounds the player collects while on court.
-DREB_100p,float,0,Defensive rebounds per 100 **team defensive possessions** while this player is on court: `DRB / POSS_DEF * 100`.
-DRBPct_FGA,float,0.25,Defensive rebound percentage on field goal attempts
-DRB_FGA_100p,float,9.090909091,Defensive rebounds per 100 **team offensive possessions** while this player is on court
-DRBPct_FT,float,0,Defensive rebound percentage on free throw attempts
-DRB_FT_100p,float,0,Defensive rebounds on free throw attempts per 100 **team defensive possessions** while this player is on court
-DRB,int,0,Defensive rebounds credited to the player.
-DREB_FGA,int,1,Defensive rebounds off field goal attempts
-DRB_FT,int,0,Defensive rebounds off free throw attempts
-ASTpct,float,0.25,Assist percentage – estimate of percentage of teammate field goals the player assisted while on court.
-AST_100p,float,7.89,Assists per 100 team possessions while the player is on court. (Exact poss base may be all poss or offensive poss depending on your upstream calc.)
-AST,int,3,Assists credited to the player.
-PF_100p,float,0,Personal fouls committed per 100 team possessions while on court.
-PF,int,0,Personal fouls committed.
-PF_DRAWN_100p,float,2.63,Personal fouls drawn per 100 team possessions while on court.
-PF_DRAWN,int,1,Personal fouls drawn (fouls committed by opponents on this player).
-PF_Loose_100p,float,0,Loose?ball fouls committed per 100 team possessions.
-PF_Loose,int,0,Loose?ball fouls committed by the player.
-CHRG_100p,float,0,Charges drawn per 100 team possessions while on court.
-CHRG,int,0,Charges drawn by the player (offensive fouls by opponents where this player is the primary defender).
-TECH_100p,float,0,Technical fouls committed per 100 team possessions.
-TECH,int,0,Technical fouls committed.
-FLAGRANT_100p,float,0,Flagrant fouls committed per 100 team possessions.
-FLAGRANT,int,0,Flagrant fouls committed.
-BLKPct,float,0,Block percentage – share of opponent 2?pt FGA blocked by the player while on court.
-BLK_Opp_100p,float,0,`BLK_Opp` per 100 **opponent possessions** while this player is on court: `BLK_Opp / POSS_DEF * 100`.
-BLK_Team_100p,float,0,`BLK_Team` per 100 **opponent possessions** while this player is on court: `BLK_Team / POSS_DEF * 100`.
-BLK_Opp,int,0,"Blocks where the **opponent ultimately retains or regains possession** (e.g., deflection out of bounds to opponent, or opponent recovers loose ball)."
-BLK_Team,int,0,Blocks where the **player’s own team gains/retains possession** after the block (team recovers).
-BLK,int,0,Total blocks credited to the player. Identity: `BLK = BLK_Team + BLK_Opp`.
-TM_BLK_OnCourt,int,0,Total blocks by the player’s team while this player is on the court (regardless of who recovers).
-Goaltends_100p,float,0,Goaltending violations committed per 100 team possessions while on court.
-Goaltends,int,0,Goaltending violations credited to the player.
-STLpct,float,0,Steal percentage – estimate of share of opponent possessions ending in a steal by this player while on court.
-STL_100p,float,0,Steals per 100 opponent (or total) possessions while on court (matches your upstream steal?rate denominator).
-STL,int,0,Steals credited to the player.
-TOVpct,float,0,Turnover percentage – estimate of turnovers per possession used by the player.
-TOV_100p,float,0,Turnovers per 100 team offensive possessions while on court.
-TOV_Live_100p,float,0,"Live?ball turnovers per 100 team offensive possessions (steals, etc.)."
-TOV_Dead_100p,float,0,"Dead?ball turnovers per 100 team offensive possessions (violations, charges, etc.)."
-TOV,int,0,Total turnovers committed by the player.
-TOV_Live,int,0,Live?ball turnovers committed.
-TOV_Dead,int,0,Dead?ball turnovers committed.
-FTM_100p,float,2.63,Free throws made per 100 **team offensive possessions** while on court: `FTM / POSS_OFF * 100`.
-FTA_100p,float,2.63,Free throws attempted per 100 **team offensive possessions** while on court: `FTA / POSS_OFF * 100`.
-FTM,int,0,Free throws made
-FTA,int,0,Free throws attempted
-FT%,float,1,Free?throw percentage: `FTM / FTA` (1.0 means 100%).
-FTR_Att,float,0.5,Free?throw rate by attempts: `FTA / FGA`.
-FTR_Made,float,0.5,Free?throw rate by makes: `FTM / FGA`.
-AndOne_100p,float,0,And?1s (FGM + drawn shooting foul on same play) per 100 team offensive possessions.
-AndOnes,int,0,Count of And?1 plays.
-FGM,int,0,Field Goals Made
-FGA,int,0,Field Goals Attempted
-FGM_100p,float,5.26,Field goals made per 100 **team offensive possessions** while on court: `FGM / POSS_OFF * 100`.
-FGA_100p,float,5.26,Field goals attempted per 100 **team offensive possessions** while on court: `FGA / POSS_OFF * 100`.
-FGPct,float,0.5,Field?goal percentage: `FGM / FGA`.
-0_3ft_FGM,int,2,Field goals made from 0–3 ft (restricted area / at rim).
-0_3ft_FGA,int,4,Field goals attempted from 0–3 ft.
-0_3ft_FGM_100p,float,5.26,0–3 ft FGM per 100 team offensive possessions.
-0_3ft_FGA_100p,float,10.53,0–3 ft FGA per 100 team offensive possessions.
-0_3ft_FGPct,float,0.5,FG% on 0–3 ft shots: `0_3ft_FGM / 0_3ft_FGA`.
-4_9ft_FGM,int,0,Field goals made from 4–9 ft.
-4_9ft_FGA,int,2,Field goals attempted from 4–9 ft.
-4_9ft_FGM_100p,float,0,4–9 ft FGM per 100 team offensive possessions.
-4_9ft_FGA_100p,float,5.26,4–9 ft FGA per 100 team offensive possessions.
-4_9ft_FGPct,float,0,FG% on 4–9 ft shots.
-10_17ft_FGM,int,0,Field goals made from 10–17 ft.
-10_17ft_FGA,int,0,Field goals attempted from 10–17 ft.
-10_17ft_FGM_100p,float,0,10–17 ft FGM per 100 team offensive possessions.
-10_17ft_FGA_100p,float,0,10–17 ft FGA per 100 team offensive possessions.
-10_17ft_FGPct,float,0,FG% on 10–17 ft shots.
-18_23ft_FGM,int,1,Field goals made from 18–23 ft (long twos / short threes by distance).
-18_23ft_FGA,int,4,Field goals attempted from 18–23 ft.
-18_23ft_FGM_100p,float,2.63,18–23 ft FGM per 100 team offensive possessions.
-18_23ft_FGA_100p,float,10.53,18–23 ft FGA per 100 team offensive possessions.
-18_23ft_FGPct,float,0.25,FG% on 18–23 ft shots.
-3PM,int,0,Three Pointers Made
-3PA,int,0,Three Pointers Attempted
-3PM_100p,float,5.26,3?pt FGM per 100 **team offensive possessions** while on court: `3PM / POSS_OFF * 100`.
-3PA_100p,float,10.53,3?pt FGA per 100 **team offensive possessions** while on court: `3PA / POSS_OFF * 100`.
-3PPct,float,0.5,3?pt percentage: `3PM / 3PA`.
-FGM_UNAST,int,4,Field goals made that are unassisted.
-FGA_UNAST,int,14,Field goal attempts that are unassisted.
-FGM_UNAST_100p,float,5.26,Unassisted FGM per 100 **team offensive possessions** while on court.
-FGA_UNAST_100p,float,18.42,Unassisted FGA per 100 **team offensive possessions** while on court.
-FG_UNAST_Pct,float,0.286,**FG% on unassisted shots**: `FGM_UNAST / FGA_UNAST`.
-0_3ft_FGM_UNAST,int,2,Unassisted field goals made from 0–3 ft.
-0_3ft_FGA_UNAST,int,3,Unassisted field goal attempts from 0–3 ft.
-0_3ft_FGM_100p_UNAST,float,2.63,0–3 ft unassisted FGM per 100 team offensive possessions.
-0_3ft_FGA_100p_UNAST,float,3.95,0–3 ft unassisted FGA per 100 team offensive possessions.
-0_3ft_FG_UNAST_Pct,float,0.667,FG% on **unassisted** 0–3 ft attempts: `0_3ft_FGM_UNAST / 0_3ft_FGA_UNAST`.
-4_9ft_FGM_UNAST,int,1,Unassisted field goals made from 4–9 ft.
-4_9ft_FGA_UNAST,int,2,Unassisted field goal attempts from 4–9 ft.
-4_9ft_FGM_100p_UNAST,float,1.32,4–9 ft unassisted FGM per 100 team offensive possessions.
-4_9ft_FGA_UNAST_100p,float,2.63,4–9 ft unassisted FGA per 100 team offensive possessions.
-4_9ft_FG_UNAST_Pct,float,0.5,FG% on **unassisted** 4–9 ft attempts.
-10_17ft_FGM_UNAST,int,0,Unassisted field goals made from 10–17 ft.
-10_17ft_FGA_UNAST,int,1,Unassisted field goal attempts from 10–17 ft.
-10_17ft_FGM_UNAST_100p,float,0,10–17 ft unassisted FGM per 100 team offensive possessions.
-10_17ft_FGA_UNAST_100p,float,1.32,10–17 ft unassisted FGA per 100 team offensive possessions.
-10_17ft_FG_UNAST_Pct,float,0,FG% on **unassisted** 10–17 ft attempts.
-18_23ft_FGM_UNAST,int,1,Unassisted field goals made from 18–23 ft.
-18_23ft_FGA_UNAST,int,3,Unassisted field goal attempts from 18–23 ft.
-18_23ft_FGM_UNAST_100p,float,1.32,18–23 ft unassisted FGM per 100 team offensive possessions.
-18_23ft_FGA_UNAST_100p,float,3.95,18–23 ft unassisted FGA per 100 team offensive possessions.
-18_23ft_FG_UNAST_Pct,float,0.333,FG% on **unassisted** 18–23 ft attempts.
-3PM_UNAST,int,1,Unassisted 3?pt field goals made.
-3PA_UNAST,int,5,Unassisted 3?pt attempts.
-3PM_UNAST_100p,float,1.32,Unassisted 3PM per 100 team offensive possessions.
-3PA_UNAST_100p,float,6.58,Unassisted 3PA per 100 team offensive possessions.
-3P_UNAST_Pct,float,0.2,3?pt percentage **on unassisted 3s**: `3PM_UNAST / 3PA_UNAST`.
-FGM_AST,int,1,Assisted field goals made (`FGM - FGM_UNAST`).
-FGM_100p_AST,float,2.63,Assisted FGM per 100 team offensive possessions.
-0_3ft_FGM_AST,int,0,Assisted field goals made from 0–3 ft.
-0_3ft_FGM_100p_AST,float,0,0–3 ft assisted FGM per 100 team offensive possessions.
-4_9ft_FGM_AST,int,1,Assisted field goals made from 4–9 ft.
-4_9ft_FGM_100p_AST,float,2.63,4–9 ft assisted FGM per 100 team offensive possessions.
-10_17ft_FGM_AST,int,0,Assisted field goals made from 10–17 ft.
-10_17ft_FGM_100p_AST,float,0,10–17 ft assisted FGM per 100 team offensive possessions.
-18_23ft_FGM_AST,int,0,Assisted field goals made from 18–23 ft.
-18_23ft_FGM_100p_AST,float,0,18–23 ft assisted FGM per 100 team offensive possessions.
-3PM_AST,int,1,Assisted 3?pt field goals made.
-3PM_100p_AST,float,2.63,Assisted 3PM per 100 team offensive possessions.
-AST_0_3ft,int,0,Assists by this player leading to teammates’ 0–3 ft makes.
-AST_0_3ft_100p,float,0,Such assists per 100 team offensive possessions.
-AST_4_9ft,int,2,Assists leading to 4–9 ft makes by teammates.
-AST_4_9ft_100p,float,5.26,Such assists per 100 team offensive possessions.
-AST_10_17ft,int,0,Assists leading to 10–17 ft makes by teammates.
-AST_10_17ft_100p,float,0,Such assists per 100 team offensive possessions.
-AST_18_23ft,int,0,Assists leading to 18–23 ft makes by teammates (long 2s / short 3s).
-AST_18_23ft_100p,float,0,Such assists per 100 team offensive possessions.
-AST_3P,int,1,Assists leading to 3?pt makes by teammates.
-AST_3P_100p,float,2.63,Such assists per 100 team offensive possessions.
-OnCourt_Opp_FT_Made,int,7,Opponent free throws made while this player is on the court.
-OnCourt_Opp_FT_Att,int,8,Opponent free throws attempted while this player is on the court.
-OnCourt_Opp_3p_Made,int,4,Opponent 3?pt field goals made while this player is on court.
-OnCourt_Opp_3p_Att,int,12,Opponent 3?pt field goals attempted while this player is on court.
-OnCourt_Opp_FGA,int,34,Opponent field goal attempts while this player is on court.
-OnCourt_Opp_Points,int,39,Opponent points scored while this player is on court.
-OnCourt_For_OREB_FGA,int,16,Team Offensive Rebounds off field goals when player was on the court
-OnCourt_For_DREB_FGA,int,17,Team defensive rebounds off field goals when player was on the court
-OnCourt_Team_FT_Made,int,6,Team free throws made while this player is on court.
-OnCourt_Team_FT_Att,int,8,Team free throws attempted while this player is on court.
-OnCourt_Team_3p_Made,int,2,Team 3?pt field goals made while this player is on court.
-OnCourt_Team_3p_Att,int,8,Team 3?pt field goals attempted while this player is on court.
-OnCourt_Team_Points,int,36,Team points scored while this player is on court.
-Plus_Minus,int,-3,On?court scoring margin: `OnCourt_Team_Points – OnCourt_Opp_Points` while the player is on the floor.
-season,int,1997,Season year for this row (matches `Year` in your sample).
-h_tm_id,int,1610612747,Home team ID (NBA franchise id).
-v_tm_id,int,1610612737,Visitor team ID.
-home_fl,int,1,"1 if the row’s team is the home team, 0 otherwise."
-check_season,int,0,Internal check flag for season alignment / data QC (1/0).
+game_id,int,21900151,Internal game identifier in parsed play-by-play data.
+team_id,int,1610612747,Numeric team identifier for the row (matches `team_id` in play-by-play).
+player_id,int,2544,Numeric player identifier from the play-by-play source.
+PTS,float,19.0,Total points scored.
+DREB,float,7.0,Defensive rebounds credited to the player.
+PF_DRAWN,float,6.0,Personal fouls drawn.
+FGA,float,18.0,Field goal attempts.
+FGM,float,8.0,Field goals made.
+ThreePA,float,4.0,Three-point attempts (source uses ThreePA).
+ThreePM,float,1.0,Three-point makes (source uses ThreePM).
+FGM_AST,float,3.0,Assisted field goals made (`FGM - FGM_UNAST`).
+ThreePM_AST,float,0.0,Assisted three-point makes.
+PF,float,0.0,Personal fouls committed.
+4_9_FGA,float,1.0,Field goal attempts from 4-9 ft.
+FGA_UNAST,float,15.0,Unassisted field goal attempts.
+4_9_FGA_UNAST,float,1.0,Unassisted field goal attempts from 4-9 ft.
+AST,float,11.0,Assists credited to the player.
+CHRG,float,4.0,Charges drawn by the player (offensive fouls on opponent).
+FTA,float,7.0,Free throw attempts.
+FTM,float,2.0,Free throws made.
+ThreePA_UNAST,float,4.0,Unassisted three-point attempts.
+0_3_FGA,float,10.0,Field goal attempts from 0-3 ft.
+0_3_FGM,float,5.0,Field goals made from 0-3 ft.
+0_3_FGM_AST,float,2.0,Assisted field goals made from 0-3 ft.
+Goaltends,float,0.0,Goaltending violations credited to the player.
+4_9_FGM,float,0.0,Field goals made from 4-9 ft.
+4_9_FGM_AST,float,0.0,Assisted field goals made from 4-9 ft.
+0_3_FGA_UNAST,float,8.0,Unassisted field goal attempts from 0-3 ft.
+OREB,float,0.0,Offensive rebounds credited to the player.
+10_17_FGA,float,2.0,Field goal attempts from 10-17 ft.
+10_17_FGM,float,1.0,Field goals made from 10-17 ft.
+10_17_FGM_AST,float,1.0,Assisted field goals made from 10-17 ft.
+18_23_FGA,float,1.0,Field goal attempts from 18-23 ft.
+18_23_FGM,float,1.0,Field goals made from 18-23 ft.
+FGM_UNAST,float,5.0,Unassisted field goals made.
+18_23_FGA_UNAST,float,1.0,Unassisted field goal attempts from 18-23 ft.
+18_23_FGM_UNAST,float,1.0,Unassisted field goals made from 18-23 ft.
+TOV,float,1.0,Total turnovers committed by the player.
+TOV_Dead,float,0.0,Dead-ball turnovers committed.
+TOV_Live,float,1.0,Live-ball turnovers committed.
+AST_3P,float,3.0,Assists leading to three-point makes.
+0_3_FGM_UNAST,float,3.0,Unassisted field goals made from 0-3 ft.
+10_17_FGA_UNAST,float,1.0,Unassisted field goal attempts from 10-17 ft.
+BLK,float,0.0,Total blocks credited to the player (BLK_Team + BLK_Opp).
+BLK_Opp,float,0.0,Blocks where the opponent retains or regains possession.
+18_23_FGM_AST,float,0.0,Assisted field goals made from 18-23 ft.
+STL,float,0.0,Steals credited to the player.
+ThreePM_UNAST,float,1.0,Unassisted three-point field goals made.
+4_9_FGM_UNAST,float,0.0,Unassisted field goals made from 4-9 ft.
+Minutes,float,37.36666666666667,Raw minutes played in the game.
+OnCourt_For_DREB_Total,float,37.0,Team defensive rebound opportunities on field-goal attempts while on court.
+OnCourt_For_OREB_Total,float,34.0,Team offensive rebound opportunities on field-goal attempts while on court.
+TM_BLK_OnCourt,float,4.0,Team blocks while player on court (regardless of recovery).
+POSS_DEF,float,78.0,Team defensive possessions while on court.
+OnCourt_Opp_Points,float,92.0,Opponent points scored while this player is on court.
+OnCourt_Team_Points,float,91.0,Team points scored while this player is on court.
+OnCourt_Opp_3p_Att,float,23.0,Opponent three-pointers attempted while on court.
+OnCourt_Opp_3p_Made,float,7.0,Opponent three-pointers made while on court.
+OnCourt_Opp_2p_Att,float,35.0,Opponent two-point attempts while on court.
+OnCourt_Opp_FT_Att,float,10.0,Opponent free throws attempted while on court.
+OnCourt_Opp_FT_Made,float,7.0,Opponent free throws made while on court.
+OnCourt_Opp_FGA,float,58.0,Opponent field goal attempts while on court.
+OnCourt_Opp_FGM,float,21.0,Opponent field goals made while on court.
+POSS_OFF,float,72.0,Team offensive possessions while on court.
+OnCourt_Team_3p_Att,float,13.0,Team three-pointers attempted while on court.
+OnCourt_Team_3p_Made,float,2.0,Team three-pointers made while on court.
+OnCourt_Team_FT_Att,float,19.0,Team free throws attempted while on court.
+OnCourt_Team_FT_Made,float,10.0,Team free throws made while on court.
+OnCourt_Team_FGM,float,20.0,Team field goals made while on court.
+OnCourt_Team_FGA,float,53.0,Team field goals attempted while on court.
+POSS,float,150.0,Total possessions while on court: POSS_OFF + POSS_DEF.
+MPG,float,37.36666666666667,Minutes played (or minutes per game in aggregates).
+MPG_R,float,7.473333333333334,Rounded minutes value if provided.
+Team_SingleGame,int,1610612747,Numeric NBA franchise ID for this team in this specific game.
+Game_SingleGame,int,21900151,Game identifier for this single-game export (matches game_id without leading zeros).
+NbaDotComID,int,2544,NBA.com personId for the player.
+Team,string,LAL,Team abbreviation for the row.
+G,int,1,Games played in sample (1 for active single-game rows).
+Inactive,int,0,Indicator that the player was inactive for the game.
+DNP,int,0,Did not play flag for the game.
+DNP_Rest,int,0,Did not play due to rest flag if present in metadata.
+DNP_CD,int,0,Did not play: coachâ€™s decision flag if present in metadata.
+DNP_SingleGame,int,0,Did not play flag specific to single-game exports.
+PlayoffGamesPlayed,int,0,Count of playoff games played if supplied upstream.
+BLK_Team,float,0,Blocks where the playerâ€™s team gains or keeps possession.
+AndOnes,int,0,Count of and-one plays (FGM with drawn foul).
+TSAttempts,float,21.08,True shooting attempts: FGA + 0.44 * FTA.
+TSpct,float,0.4506641366223909,True shooting percentage: PTS / (2 * TSAttempts) when TSAttempts > 0 else 0.
+TSPoss,float,21.08,Alias of TSAttempts.
+TS,float,0.4506641366223909,Alias of TSpct.
+PossessionsUsed,float,22.08,Possessions finished by player: FGA + 0.44 * FTA + TOV.
+USG,float,0.30666666666666664,Usage rate: PossessionsUsed / POSS_OFF when POSS_OFF > 0 else 0.
+FGPct,float,0.4444444444444444,Field goal percentage: FGM / FGA when FGA > 0 else 0.
+FT_pct,float,0.2857142857142857,Free-throw percentage: FTM / FTA when FTA > 0 else 0.
+ThreeP_pct,float,0.25,Three-point percentage: ThreePM / ThreePA when ThreePA > 0 else 0.
+FTR_Att,float,0.3888888888888889,Free-throw rate by attempts: FTA / FGA when FGA > 0 else 0.
+FTR_Made,float,0.1111111111111111,Free-throw rate by makes: FTM / FGA when FGA > 0 else 0.
+ORBpct,float,0.0,Offensive rebound percentage Â– estimate of share of available offensive rebounds the player grabs while on court.
+DRBpct,float,0.1891891891891892,Defensive rebound percentage: DREB / OnCourt_For_DREB_Total when denominator > 0 else 0.
+OnCourt_For_OREB_FGA,float,34.0,Team offensive rebound opportunities on field goals while on court.
+OnCourt_For_DREB_FGA,float,37.0,Team defensive rebound opportunities on field goals while on court.
+ASTpct,float,0.9166666666666666,Assist percentage: AST divided by teammate FGM (OnCourt_Team_FGM - FGM) when that total > 0 else 0.
+BLKPct,float,0.0,Block percentage: BLK / OnCourt_Opp_2p_Att when denominator > 0 else 0.
+STLpct,float,0.0,Steal percentage: STL / POSS_DEF when POSS_DEF > 0 else 0.
+TOVpct,float,0.045289855072463775,Turnover percentage: TOV / PossessionsUsed when PossessionsUsed > 0 else 0.
+PTS_100p,float,26.38888888888889,Points per 100 offensive possessions: PTS / POSS_OFF * 100 when POSS_OFF > 0 else 0.
+FGM_100p,float,11.11111111111111,Field goals made per 100 offensive possessions when POSS_OFF > 0 else 0.
+FGA_100p,float,25.0,Field goal attempts per 100 offensive possessions when POSS_OFF > 0 else 0.
+FTM_100p,float,2.7777777777777777,Free throws made per 100 offensive possessions when POSS_OFF > 0 else 0.
+FTA_100p,float,9.722222222222223,Free throws attempted per 100 offensive possessions when POSS_OFF > 0 else 0.
+OREB_100p,float,0.0,Offensive rebounds per 100 offensive possessions: OREB / POSS_OFF * 100 when POSS_OFF > 0 else 0.
+DREB_100p,float,8.974358974358974,Defensive rebounds per 100 defensive possessions: DREB / POSS_DEF * 100 when POSS_DEF > 0 else 0.
+AST_100p,float,15.277777777777779,Assists per 100 offensive possessions: AST / POSS_OFF * 100 when POSS_OFF > 0 else 0.
+STL_100p,float,0.0,Steals per 100 defensive possessions: STL / POSS_DEF * 100 when POSS_DEF > 0 else 0.
+TOV_100p,float,1.3888888888888888,Turnovers per 100 offensive possessions while on court: TOV / POSS_OFF * 100 when POSS_OFF > 0 else 0.
+TOV_Live_100p,float,1.3888888888888888,Live-ball turnovers per 100 offensive possessions when POSS_OFF > 0 else 0.
+TOV_Dead_100p,float,0.0,Dead-ball turnovers per 100 offensive possessions when POSS_OFF > 0 else 0.
+Plus_Minus,float,-1.0,On-court scoring margin: OnCourt_Team_Points - OnCourt_Opp_Points.
+fgm,float,8.0,Lowercase alias of FGM.
+fga,float,18.0,Lowercase alias of FGA.
+3PM,float,1.0,Alias of ThreePM.
+3PA,float,4.0,Alias of ThreePA.
+tpm,float,1.0,Lowercase alias of ThreePM.
+tpa,float,4.0,Lowercase alias of ThreePA.
+ftm,float,2.0,Lowercase alias of FTM.
+fta,float,7.0,Lowercase alias of FTA.
+points,float,19.0,Lowercase alias of PTS.
+Pace,float,192.68510258697592,"Pace while on court: (POSS_OFF + POSS_DEF) / Minutes * 48, 0 when Minutes == 0."
+BLK_Opp_100p,float,0.0,Blocks retained by opponent per 100 defensive possessions when POSS_DEF > 0 else 0.
+BLK_Team_100p,float,0.0,Blocks recovered by team per 100 defensive possessions when POSS_DEF > 0 else 0.
+PF_100p,float,0.0,Personal fouls per 100 total possessions on court: PF / POSS * 100 when POSS > 0 else 0.
+PF_DRAWN_100p,float,4.0,Personal fouls drawn per 100 possessions on court when POSS > 0 else 0.
+PF_Loose_100p,float,0.0,Loose-ball fouls committed per 100 possessions on court when POSS > 0 else 0.
+CHRG_100p,float,2.666666666666667,Charges drawn per 100 possessions on court when POSS > 0 else 0.
+TECH_100p,float,0.0,Technical fouls committed per 100 possessions on court when POSS > 0 else 0.
+FLAGRANT,float,0,Flagrant fouls committed.
+FLAGRANT_100p,float,0.0,Flagrant fouls committed per 100 possessions on court when POSS > 0 else 0.
+Goaltends_100p,float,0.0,Goaltends per 100 possessions on court when POSS > 0 else 0.
+10_17_FGM_UNAST,int,0,Unassisted field goals made from 10-17 ft.
+0_3ft_FGA_100p,float,13.88888888888889,0-3 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+0_3ft_FGM_100p,float,6.944444444444445,0-3 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+0_3ft_FGPct,float,0.5,FG% from 0-3 ft: 0_3ft_FGM / 0_3ft_FGA when attempts > 0 else 0.
+0_3ft_FGA_UNAST_100p,float,11.11111111111111,Unassisted 0-3 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+0_3ft_FGM_UNAST_100p,float,4.166666666666666,Unassisted 0-3 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+0_3ft_FG_UNAST_Pct,float,0.375,FG% on unassisted 0-3 ft attempts when attempts > 0 else 0.
+4_9ft_FGA_100p,float,1.3888888888888888,4-9 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+4_9ft_FGM_100p,float,0.0,4-9 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+4_9ft_FGPct,float,0.0,FG% from 4-9 ft: 4_9ft_FGM / 4_9ft_FGA when attempts > 0 else 0.
+4_9ft_FGA_UNAST_100p,float,1.3888888888888888,Unassisted 4-9 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+4_9ft_FGM_UNAST_100p,float,0.0,Unassisted 4-9 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+4_9ft_FG_UNAST_Pct,float,0.0,FG% on unassisted 4-9 ft attempts when attempts > 0 else 0.
+10_17ft_FGA_100p,float,2.7777777777777777,10-17 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+10_17ft_FGM_100p,float,1.3888888888888888,10-17 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+10_17ft_FGPct,float,0.5,FG% from 10-17 ft: 10_17ft_FGM / 10_17ft_FGA when attempts > 0 else 0.
+10_17ft_FGA_UNAST_100p,float,1.3888888888888888,Unassisted 10-17 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+10_17ft_FGM_UNAST_100p,float,0.0,Unassisted 10-17 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+10_17ft_FG_UNAST_Pct,float,0.0,FG% on unassisted 10-17 ft attempts when attempts > 0 else 0.
+18_23ft_FGA_100p,float,1.3888888888888888,18-23 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+18_23ft_FGM_100p,float,1.3888888888888888,18-23 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+18_23ft_FGPct,float,1.0,FG% from 18-23 ft: 18_23ft_FGM / 18_23ft_FGA when attempts > 0 else 0.
+18_23ft_FGA_UNAST_100p,float,1.3888888888888888,Unassisted 18-23 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+18_23ft_FGM_UNAST_100p,float,1.3888888888888888,Unassisted 18-23 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+18_23ft_FG_UNAST_Pct,float,1.0,FG% on unassisted 18-23 ft attempts when attempts > 0 else 0.
+ThreePM_UNAST_100p,float,1.3888888888888888,Unassisted 3PM per 100 offensive possessions when POSS_OFF > 0 else 0.
+ThreePA_UNAST_100p,float,5.555555555555555,Unassisted 3PA per 100 offensive possessions when POSS_OFF > 0 else 0.
+ThreeP_UNAST_Pct,float,0.25,Three-point percentage on unassisted threes when ThreePA_UNAST > 0 else 0.
+FGM_100p_AST,float,4.166666666666666,Assisted field goals made per 100 offensive possessions when POSS_OFF > 0 else 0.
+ThreePM_100p_AST,float,0.0,Assisted three-point makes per 100 offensive possessions when POSS_OFF > 0 else 0.
+0_3ft_FGM_AST,float,2.0,Assisted FGM from 0-3 ft.
+0_3ft_FGM_100p_AST,float,2.7777777777777777,Assisted 0-3 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+4_9ft_FGM_AST,float,0.0,Assisted FGM from 4-9 ft.
+4_9ft_FGM_100p_AST,float,0.0,Assisted 4-9 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+10_17ft_FGM_AST,float,1.0,Assisted FGM from 10-17 ft.
+10_17ft_FGM_100p_AST,float,1.3888888888888888,Assisted 10-17 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+18_23ft_FGM_AST,float,0.0,Assisted FGM from 18-23 ft.
+18_23ft_FGM_100p_AST,float,0.0,Assisted 18-23 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+AST_0_3ft_100p,float,9.722222222222223,Assists to 0-3 ft makes per 100 offensive possessions when POSS_OFF > 0 else 0.
+AST_4_9ft_100p,float,0.0,Assists to 4-9 ft makes per 100 offensive possessions when POSS_OFF > 0 else 0.
+AST_10_17ft_100p,float,0.0,Assists to 10-17 ft makes per 100 offensive possessions when POSS_OFF > 0 else 0.
+AST_18_23ft_100p,float,1.3888888888888888,Assists to 18-23 ft makes per 100 offensive possessions when POSS_OFF > 0 else 0.
+AST_3P_100p,float,4.166666666666666,Three-point assists per 100 offensive possessions when POSS_OFF > 0 else 0.
+h_tm_id,int,1610612756,Home team ID.
+v_tm_id,int,1610612747,Visitor team ID.
+home_fl,int,0,"1 if the team is the home team, otherwise 0."
+season,int,2019,Season year (mirrors Year).
+Year,int,2019,Season year for the play-by-play row.
+check_season,int,0,Quality-control flag for season alignment (0/1).
+PlayerSeasonID,float,,Season-level player identifier if supplied.
+PlayerID,int,,Alternate player identifier if provided by metadata.
+FullName,string,,Player name when available from metadata.
+Position,float,,"Player position string (e.g., G, F, C)."
+PositionNum,float,,"Numeric encoding of Position (1=PG ... 5=C, midpoints for hybrids)."
+Height,float,,Player height if provided by metadata.
+Weight,float,,Player weight if provided by metadata.
+Age,float,,Player age if provided by metadata.
+Player_Team,string,,Concatenation of FullName and NbaDotComID for uniqueness.
+FT%,float,0.2857142857142857,Alias of FT_pct.
+3PPct,float,0.25,Alias of ThreeP_pct.
+3PM_100p,float,1.3888888888888888,Three-point makes per 100 offensive possessions when POSS_OFF > 0 else 0.
+3PA_100p,float,5.555555555555555,Three-point attempts per 100 offensive possessions when POSS_OFF > 0 else 0.
+AndOne_100p,float,0.0,And-one plays per 100 offensive possessions when POSS_OFF > 0 else 0.
+OREB_FGA,float,0.0,Offensive rebounds per 100 team FGA while on court: OREB / OnCourt_Team_FGA * 100 when OnCourt_Team_FGA > 0 else 0.
+OREB_FT,float,0.0,Offensive rebounds per 100 team FTA while on court: OREB / OnCourt_Team_FT_Att * 100 when OnCourt_Team_FT_Att > 0 else 0.
+FGM_UNAST_100p,float,6.944444444444445,Unassisted FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+FGA_UNAST_100p,float,20.833333333333336,Unassisted FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+FG_UNAST_Pct,float,0.3333333333333333,FG% on unassisted shots: FGM_UNAST / FGA_UNAST when FGA_UNAST > 0 else 0.
+3PM_UNAST,float,1.0,Alias of ThreePM_UNAST.
+3PA_UNAST,float,4.0,Alias of ThreePA_UNAST.
+3PM_UNAST_100p,float,1.3888888888888888,Alias of ThreePM_UNAST_100p.
+3PA_UNAST_100p,float,5.555555555555555,Alias of ThreePA_UNAST_100p.
+3P_UNAST_Pct,float,0.25,Alias of ThreeP_UNAST_Pct.
+3PM_AST,float,0.0,Alias of ThreePM_AST.
+3PM_100p_AST,float,0.0,Alias of ThreePM_100p_AST.
+0_3ft_FGA,float,10.0,Field goal attempts from 0-3 ft.
+0_3ft_FGM,float,5.0,Field goals made from 0-3 ft.
+0_3ft_FGA_UNAST,float,8.0,Unassisted FGA from 0-3 ft.
+0_3ft_FGM_UNAST,float,3.0,Unassisted FGM from 0-3 ft.
+0_3ft_FGM_100p_UNAST,float,4.166666666666666,0Â–3 ft unassisted FGM per 100 team offensive possessions.
+0_3ft_FGA_100p_UNAST,float,11.11111111111111,0Â–3 ft unassisted FGA per 100 team offensive possessions.
+4_9ft_FGA,float,1.0,Field goal attempts from 4-9 ft.
+4_9ft_FGM,float,0.0,Field goals made from 4-9 ft.
+4_9ft_FGA_UNAST,float,1.0,Unassisted FGA from 4-9 ft.
+4_9ft_FGM_UNAST,float,0.0,Unassisted FGM from 4-9 ft.
+4_9ft_FGM_100p_UNAST,float,0.0,4Â–9 ft unassisted FGM per 100 team offensive possessions.
+4_9ft_FGA_100p_UNAST,float,1.3888888888888888,Unassisted 4-9 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+10_17ft_FGA,float,2.0,Field goal attempts from 10-17 ft.
+10_17ft_FGM,float,1.0,Field goals made from 10-17 ft.
+10_17ft_FGA_UNAST,float,1.0,Unassisted FGA from 10-17 ft.
+10_17ft_FGM_UNAST,int,0,Unassisted FGM from 10-17 ft.
+10_17ft_FGM_100p_UNAST,float,0.0,Unassisted 10-17 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+10_17ft_FGA_100p_UNAST,float,1.3888888888888888,Unassisted 10-17 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+18_23ft_FGA,float,1.0,Field goal attempts from 18-23 ft.
+18_23ft_FGM,float,1.0,Field goals made from 18-23 ft.
+18_23ft_FGA_UNAST,float,1.0,Unassisted FGA from 18-23 ft.
+18_23ft_FGM_UNAST,float,1.0,Unassisted FGM from 18-23 ft.
+18_23ft_FGM_100p_UNAST,float,1.3888888888888888,Unassisted 18-23 ft FGM per 100 offensive possessions when POSS_OFF > 0 else 0.
+18_23ft_FGA_100p_UNAST,float,1.3888888888888888,Unassisted 18-23 ft FGA per 100 offensive possessions when POSS_OFF > 0 else 0.
+DRB,float,7.0,Alias for defensive rebounds (DREB).
+AST_0_3ft,float,7.0,Assists leading to makes from 0-3 ft.
+AST_4_9ft,float,0.0,Assists leading to makes from 4-9 ft.
+AST_10_17ft,float,0.0,Assists leading to makes from 10-17 ft.
+AST_18_23ft,float,1.0,Assists leading to makes from 18-23 ft.
+Starts,int,1,"Starter flag (1 if player started, else 0)."
+AST_0_3,float,7.0,Assists leading to makes from 0-3 ft.
+AST_4_9,float,0.0,Assists leading to makes from 4-9 ft.
+AST_10_17,float,0.0,Assists leading to makes from 10-17 ft.
+AST_18_23,float,1.0,Assists leading to makes from 18-23 ft.

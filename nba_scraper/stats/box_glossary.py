@@ -8,8 +8,27 @@ if TYPE_CHECKING:
 
 import re
 
+from importlib.resources import files
+
 import numpy as np
 import pandas as pd
+
+
+def load_glossary_schema() -> pd.DataFrame:
+    """
+    Load the canonical player-box glossary schema from glossary_schema.csv.
+
+    Returns
+    -------
+    DataFrame
+        Columns:
+          - Column: column name in player_box_glossary output
+          - Type: broad dtype category (e.g. 'int', 'float', 'string', 'bool')
+          - Example: example value (string for documentation)
+          - Definition: human-readable description
+    """
+    csv_path = files(__package__).joinpath("glossary_schema.csv")
+    return pd.read_csv(csv_path)
 
 # Mapping for base positions to numeric slots.
 # 1=PG, 2=SG, 3=SF, 4=PF, 5=C. "G" and "F" are midpoints.
@@ -1231,6 +1250,7 @@ def build_player_box(
         "OREB",
         "DREB",
         "PF",
+        "FLAGRANT",
         "BLK",
         "BLK_Team",
         "BLK_Opp",
@@ -1243,6 +1263,10 @@ def build_player_box(
         "TOV_Dead",
         "FGM_AST",
         "ThreePM_AST",
+        "AST_0_3",
+        "AST_4_9",
+        "AST_10_17",
+        "AST_18_23",
     ]
     for col in required_zero_cols:
         if col not in merged.columns:

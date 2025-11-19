@@ -214,6 +214,32 @@ analytics stack, a SQL warehouse or the built-in stats helpers under
 Because CDN and v2 sources both map onto the same schema you can mix seasons and
 data sources without any post-processing.
 
+## Player box glossary schema
+
+The per-player box returned by `nba_scraper.stats.PbP.player_box_glossary()` and
+`player_box_glossary_with_totals()` follows a documented schema.
+
+The canonical source of truth for columns, types, and definitions lives in:
+
+- `nba_scraper/stats/glossary_schema.csv`
+
+That file defines:
+
+- `Column` – column name in the player box output
+- `Type` – broad dtype category (`int`, `float`, `string`, `bool`, etc.)
+- `Example` – representative value
+- `Definition` – human-readable explanation, including formulas for derived metrics
+
+Examples (see the CSV for the full list):
+
+| Column    | Definition                                                                 |
+|-----------|-----------------------------------------------------------------------------|
+| TSAttempts | True shooting attempts: `FGA + 0.44 * FTA`.                                 |
+| TSpct     | `PTS / (2 * TSAttempts)` when attempts are available, else `0`.             |
+| USG       | Usage rate: `PossessionsUsed / POSS_OFF` with zero guardrails.              |
+| Pace      | On-court pace: `(POSS_OFF + POSS_DEF) / Minutes * 48` (0 if `Minutes` = 0). |
+| PTS_100p  | Points per 100 team offensive possessions: `PTS / POSS_OFF * 100`.          |
+
 # Maintainer & contact
 
 `nba_scraper` was founded by Matthew Barlowe, and the project will always be grateful for the groundwork he laid. Day-to-day maintenance now happens under Kostya Medvedovsky (@kmedved on Twitter, creator of DARKO).

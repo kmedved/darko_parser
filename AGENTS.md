@@ -30,6 +30,7 @@ This section documents every tracked file in the repository so downstream LLM ag
 * `boxscore_validation.py` – Computes team totals from canonical PbP, compares against official box scores, and provides logging helpers plus field constant tuples.
 * `helper_functions.py` – See above; located in core package to support scraping flows.
 * `schema.py` – Canonical column ordering, event type labels, and simple numeric helpers (`int_or_zero`, `scoremargin_str`, `points_made_from_family`).
+* `nba_scraper/stats/glossary_schema.csv` – Canonical schema for the per-player box returned by `PbP.player_box_glossary()` / `player_box_glossary_with_totals()`. Columns: `Column`, `Type`, `Example`, `Definition`. Downstream agents should treat this as the single source of truth for what each column means.
 
 ### Mapping utilities (`nba_scraper/mapping/`)
 * `__init__.py` – Re-exports descriptor normalization and event code helpers.
@@ -72,3 +73,8 @@ parser = PbP(df)
 box_score = parser.player_box_glossary() # Returns player stats + team totals
 rapm = parser.rapm_possessions()         # Returns possession-level data
 ```
+
+`PbP.player_box_glossary()` returns columns defined in `glossary_schema.csv`. When
+describing metrics (TSAttempts, USG, ASTpct, etc.), consult this CSV instead of
+guessing. Do not invent new columns or semantics; if something is missing or unclear,
+flag it for human review.
