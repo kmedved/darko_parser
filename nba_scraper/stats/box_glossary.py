@@ -469,15 +469,15 @@ def annotate_events(df: pd.DataFrame) -> pd.DataFrame:
         df["shot_zone"] = None
 
     # --- Off/def team ids for event-level context ---
-    off_mask = df["is_fg_attempt"] | df["is_ft"] | (df["family"] == "turnover")
-    df["off_team_id"] = np.where(off_mask, df["team_id"], np.nan)
-    df["def_team_id"] = np.where(
-        off_mask,
-        np.where(
-            df["off_team_id"] == df["home_team_id"], df["away_team_id"], df["home_team_id"]
-        ),
-        np.nan,
-    )
+    off_mask = (
+        df["is_fg_attempt"].fillna(False)
+        | df["is_ft"].fillna(False)
+        | df["family"].fillna("").eq("turnover")
+    ).fillna(False)
+    df["off_team_id"] = df["team_id"].where(off_mask, np.nan)
+    home_match = (df["off_team_id"] == df["home_team_id"]).fillna(False)
+    df["def_team_id"] = np.where(home_match, df["away_team_id"], df["home_team_id"])
+    df.loc[~off_mask, "def_team_id"] = np.nan
 
     return df
 

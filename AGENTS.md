@@ -49,6 +49,7 @@ This section documents every tracked file in the repository so downstream LLM ag
 * `test_teamtotals_ft_metrics.py` – Checks free-throw trip metadata and team total calculations for correctness.
 * `test_unit.py` – Unit-level coverage for helper utilities (time parsing, possession inference, shot coordinate synthesis, etc.).
 * Fixture files under `tests/test_files/` – Frozen CDN/v2 JSON payloads and minimal YAML mapping used by the test suite (`cdn_playbyplay_0022400001.json`, `cdn_boxscore_0022400001.json`, `cdn_shotchart_0022400001.json`, `v2_pbp_0021700001.json`, `mapping_min.yml`).
+* Stats-focused regression tests live under `tests/stats/`. Use the shared fixtures defined in `tests/stats/conftest.py` (e.g., `v2_pbp_df`, `pbp_v2_game`, and `stats_fixture_dir`) instead of calling `pd.read_csv("test/...csv")` directly; all CSV fixtures reside in `tests/stats/test_files/`.
 
 ### Project data and misc
 * `requirements.txt` – Dependency pins used for installation/testing.
