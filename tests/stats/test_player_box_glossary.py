@@ -1,5 +1,5 @@
 import pandas as pd
-from nba_parser.pbp import PbP
+from nba_scraper.stats import PbP
 
 
 def test_player_box_glossary_basics():

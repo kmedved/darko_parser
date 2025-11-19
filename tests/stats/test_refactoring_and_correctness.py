@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import pytest
-from nba_parser.pbp import PbP
-from nba_parser.box_glossary import (
+from nba_scraper.stats import PbP
+from nba_scraper.stats.box_glossary import (
     accumulate_player_counts,
     annotate_events,
     build_player_box,
@@ -96,7 +96,7 @@ def test_vectorized_helpers_match_row_wise():
     })
 
     # Old logic for comparison
-    from nba_parser.box_glossary import classify_shot_zone
+    from nba_scraper.stats.box_glossary import classify_shot_zone
     df["shot_zone_old"] = df.apply(lambda r: classify_shot_zone(r.get("shot_distance"), r.get("area")), axis=1)
     df["is_and_one_old"] = df["qualifiers"].astype(str).str.lower().str.contains(r"and[ -]?one|and1")
 

@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import pytest
-from nba_parser import PbP
-from nba_parser.box_glossary import annotate_events
+from nba_scraper.stats import PbP
+from nba_scraper.stats.box_glossary import annotate_events
 
 
 @pytest.fixture(scope="module")
