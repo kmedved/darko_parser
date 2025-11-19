@@ -17,6 +17,8 @@ main functions `scrape_game` which scrapes an individual game or a list of
 specific games, and `scrape_season` which scrapes an entire season of regular
 season games.
 
+`nba_scraper` is maintained as a standalone project and no longer depends on, or integrates with, `kmedved/nba_scraper` or `kmedved/nba_parser`.
+
 The scraper now supports both the modern NBA CDN live data feeds (2019 and later)
 and legacy v2 JSON archives. No matter the source, results are normalised to a
 canonical schema that includes structured shot metadata, team context and on-court
@@ -25,7 +27,7 @@ lineups computed from the play-by-play itself.
 ## Canonical dataframe columns
 
 Each parsed play-by-play row exposes a common set of columns that are designed to
-interoperate with downstream tools such as `nba_parser`. In addition to the core
+interoperate with downstream analytics tools without requiring external parser dependencies. In addition to the core
 fields (`eventmsgtype`, `pctimestring`, `player1_id`, etc.) the dataframe now
 includes:
 
@@ -44,7 +46,7 @@ includes:
 * `home_player_1`…`home_player_5` / `away_player_1`…`away_player_5` – lineup
   names alongside the existing ID columns.
 
-These compatibility columns are present for both CDN and legacy v2 sources so
+These columns are present for both CDN and legacy v2 sources so
 that the resulting dataframe can be dropped directly into analytics pipelines.
 
 ## YAML mapping
@@ -64,35 +66,9 @@ remain available regardless of this flag. Set the environment variable before
 importing ``nba_scraper.cdn_parser`` if you need the override to apply during
 module import.
 
-## Using with `nba_parser`
+## Standalone parsing outputs
 
-The canonical dataframe can be passed straight into
-[`nba_parser`](https://github.com/kmedved/nba_parser) for advanced possession and
-box score calculations. `nba_scraper` produces a canonical dataframe compatible
-with the external `nba_parser` package—install `nba_parser` separately if you
-want to use its APIs:
-
-```python
-from pathlib import Path
-
-# Requires: pip install nba_parser
-
-from nba_scraper import io_sources, lineup_builder
-from nba_parser import PbP
-
-pbp_path = Path("cdn_playbyplay_0022400001.json")
-box_path = Path("cdn_boxscore_0022400001.json")
-
-df = io_sources.parse_any((pbp_path, box_path), io_sources.SourceKind.CDN_LOCAL)
-df = lineup_builder.attach_lineups(df)
-
-pbp = PbP(df)
-player_totals = pbp.playerbygamestats()
-team_totals = pbp.teambygamestats()
-```
-
-The example above uses local CDN fixtures, but any canonical dataframe returned
-by `nba_scraper` (including legacy v2 games) will work with `nba_parser.PbP`.
+The canonical dataframe produced by `nba_scraper` is self-contained and ready for use in your own analytics stack or with the built-in helpers under `nba_scraper.stats`. No external parser packages are required.
 
 # Installation
 
@@ -228,9 +204,9 @@ ns.scrape_date_range(
 
 ## Step 5 – Work with the canonical dataframe
 
-The dataframe returned by any of the helpers is ready to feed into
-[`nba_parser.PbP`](https://pypi.org/project/nba-parser/), a SQL warehouse or your
-own analytics stack. Every row includes:
+The dataframe returned by any of the helpers is ready to feed into your own
+analytics stack, a SQL warehouse or the built-in stats helpers under
+`nba_scraper.stats`. Every row includes:
 
 * A stable `eventnum` and `pctimestring`.
 * Actor IDs plus the derived `event_team` and descriptive `event_type_de`.
