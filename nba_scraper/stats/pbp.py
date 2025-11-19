@@ -72,10 +72,8 @@ class PbP:
 
         for col in id_columns:
             if col in self.df.columns:
-                self.df[col] = (
-                    pd.to_numeric(self.df[col], errors="coerce")
-                    .fillna(0)
-                    .astype(int)
+                self.df[col] = pd.to_numeric(self.df[col], errors="coerce").astype(
+                    "Int64"
                 )
 
         # Enforce single-game input; many invariants assume one game_id.
@@ -1683,11 +1681,9 @@ class PbP:
         if not starters_df.empty:
             for col in ["game_id", "team_id", "player_id"]:
                 if col in starters_df.columns:
-                    starters_df[col] = (
-                        pd.to_numeric(starters_df[col], errors="coerce")
-                        .fillna(0)
-                        .astype(int)
-                    )
+                    starters_df[col] = pd.to_numeric(
+                        starters_df[col], errors="coerce"
+                    ).astype("Int64")
 
         return starters_df
 

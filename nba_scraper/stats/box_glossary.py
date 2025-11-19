@@ -49,7 +49,7 @@ ZONE_BINS: List[Tuple[float, float, str]] = [
 
 
 def _validate_id_dtypes(df: pd.DataFrame, context: str = ""):
-    """Ensure all ID columns are integers."""
+    """Ensure all ID columns use nullable integer dtype (Int64)."""
 
     id_cols = [
         "game_id",
@@ -65,7 +65,7 @@ def _validate_id_dtypes(df: pd.DataFrame, context: str = ""):
     for col in id_cols:
         if col in df.columns and not pd.api.types.is_integer_dtype(df[col]):
             try:
-                df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
             except Exception:
                 import warnings
 
@@ -1118,7 +1118,9 @@ def build_player_box(
 
     merged["Team_SingleGame"] = merged["team_id"]
     merged["Game_SingleGame"] = merged["game_id"]
-    merged["NbaDotComID"] = merged["player_id"].astype(int)
+    merged["NbaDotComID"] = pd.to_numeric(merged["player_id"], errors="coerce").astype(
+        "Int64"
+    )
 
     team_map = {
         df["home_team_id"].iloc[0]: df["home_team_abbrev"].iloc[0],
@@ -1130,7 +1132,7 @@ def build_player_box(
         pm = player_meta.copy()
         for col in ["player_id", "NbaDotComID"]:
             if col in pm.columns:
-                pm[col] = pd.to_numeric(pm[col], errors="coerce").fillna(0).astype(int)
+                pm[col] = pd.to_numeric(pm[col], errors="coerce").astype("Int64")
         if "player_id" in pm.columns and "NbaDotComID" not in pm.columns:
             pm["NbaDotComID"] = pm["player_id"]
             pm = pm.drop(columns=["player_id"])
@@ -1148,16 +1150,20 @@ def build_player_box(
     if game_meta is not None and not game_meta.empty:
         gm = game_meta.copy()
         if "game_id" in gm.columns:
-            gm["game_id"] = pd.to_numeric(gm["game_id"], errors="coerce").fillna(0).astype(int)
+            gm["game_id"] = pd.to_numeric(gm["game_id"], errors="coerce").astype(
+                "Int64"
+            )
         merged = merged.merge(gm, on="game_id", how="left")
 
     if player_game_meta is not None and not player_game_meta.empty:
         pgm = player_game_meta.copy()
         if "game_id" in pgm.columns:
-            pgm["game_id"] = pd.to_numeric(pgm["game_id"], errors="coerce").fillna(0).astype(int)
+            pgm["game_id"] = pd.to_numeric(pgm["game_id"], errors="coerce").astype(
+                "Int64"
+            )
         for col in ["team_id", "player_id"]:
             if col in pgm.columns:
-                pgm[col] = pd.to_numeric(pgm[col], errors="coerce").fillna(0).astype(int)
+                pgm[col] = pd.to_numeric(pgm[col], errors="coerce").astype("Int64")
         merged = merged.merge(
             pgm,
             on=["game_id", "team_id", "player_id"],
@@ -1197,7 +1203,9 @@ def build_player_box(
 
     merged = merged[keep_mask]
 
-    merged["NbaDotComID"] = merged["player_id"].fillna(0).astype(int)
+    merged["NbaDotComID"] = pd.to_numeric(merged["player_id"], errors="coerce").astype(
+        "Int64"
+    )
 
     required_zero_cols = [
         "ThreePA",
