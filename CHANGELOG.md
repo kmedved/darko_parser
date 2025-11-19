@@ -4,12 +4,13 @@
 
 * Documented that Kostya Medvedovsky (@kmedved, creator of DARKO) now maintains `nba_scraper` and thanked Matthew Barlowe for creating the project.
 * Switched to installing `nba_parser` directly from the upstream `kmedved/nba_parser` default branch instead of bundling a pinned copy.
-* Removed the deprecated `TeamTotals.team_rapm_results` helper and the scikit-learn optional extra; the library now focuses on parsing RAPM-ready possession data and expects downstream tooling to run regressions.
+* Removed the deprecated team totals RAPM helper (`team_rapm_results`) and the scikit-learn optional extra; the library now focuses on parsing RAPM-ready possession data and expects downstream tooling to run regressions.
+* Fully removed the legacy team totals helper and its tests now that `player_box_glossary_with_totals` surfaces team-level aggregation.
 
 ## 1.2.2
 
 * Normalised `game_date` from both CDN and v2 parsers to a consistent `YYYY-MM-DD` string.
-* Fixed `teambygamestats()` to produce properly zero-padded `toc_string` values.
+* Fixed the legacy team totals entry point (now removed) to produce properly zero-padded `toc_string` values.
 * Deferred RAPM imports so `nba_parser` can be used without scikit-learn and documented an optional `rapm` extra.
 * Added regression tests covering the normalised dates and `toc_string` format.
 

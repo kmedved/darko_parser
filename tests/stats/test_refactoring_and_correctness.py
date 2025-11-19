@@ -149,9 +149,18 @@ def test_player_box_glossary_cdn_game(cdn_0021900151_df):
     for minutes in team_minutes:
         assert abs(minutes - total_minutes * 5.0) < 1.0
 
-    # On-court scoring invariants: same as existing v2 tests
-    team_points = pbp._point_calc_team()[["team_id", "points_for"]]
-    team_points_map = dict(zip(team_points["team_id"], team_points["points_for"]))
+    # On-court scoring invariants: sum of per-player on/off points should
+    # match the scoreboard totals derived from canonical points_made.
+    points = pd.to_numeric(cdn_0021900151_df["points_made"], errors="coerce").fillna(0)
+    points_df = pd.DataFrame({
+        "team_id": cdn_0021900151_df["team_id"],
+        "points": points,
+    })
+    points_df = points_df[(points_df["team_id"].notna()) & (points_df["team_id"] != 0)]
+    team_points = points_df.groupby("team_id")["points"].sum()
+    team_points_map = {int(team): float(val) for team, val in team_points.items()}
+
+    assert team_points_map, "Fixture should include at least one scoring team"
 
     for team_id, pts_for in team_points_map.items():
         on_for = box.loc[box["team_id"] == team_id, "OnCourt_Team_Points"].sum()
