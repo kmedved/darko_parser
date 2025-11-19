@@ -122,12 +122,13 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
         ft_n_val = _safe_team(row.get("ft_n"))
         ft_m_val = _safe_team(row.get("ft_m"))
         is_d_reb = _safe_team(row.get("is_d_rebound"))
+        is_tov = _safe_team(row.get("is_turnover"))
 
         # 1) Heuristic "hint" based on the event itself.
         hint = 0
 
         # Turnover -> opponent.
-        if event_type == 5:  # turnover
+        if event_type == 5 or is_tov == 1:  # turnover
             hint = _opponent(team_id)
 
         # Made 2PT / 3PT -> opponent.

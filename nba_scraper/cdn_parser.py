@@ -565,6 +565,19 @@ def parse_actions_to_rows(
         eventmsgtype_final = int_or_zero(row.get("eventmsgtype"))
         row["event_type_de"] = EVENT_TYPE_DE.get(eventmsgtype_final, "")
         row["is_turnover"] = 1 if eventmsgtype_final == 5 else 0
+
+        # Force offensive fouls (and charges) to be turnovers so they are
+        # correctly treated as possession-ending events by downstream stats.
+        if family == "foul":
+            sf = row.get("subfamily") or ""
+            desc_norm = canon_str(action.get("descriptor"))
+            if (
+                sf in {"offensive", "charge"}
+                or "offensive" in desc_norm
+                or "charge" in desc_norm
+            ):
+                row["is_turnover"] = 1
+
         row["is_steal"] = (
             1 if row["is_turnover"] and int_or_zero(row.get("steal_id")) else 0
         )

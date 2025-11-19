@@ -412,8 +412,16 @@ def annotate_events(df: pd.DataFrame) -> pd.DataFrame:
         | sub_lower.str.contains("lost ball")
     )
 
+    # Offensive fouls (marked with is_turnover=1 in parser) are also dead-ball turnovers
+    is_turnover_col = df.get("is_turnover")
+    if is_turnover_col is None:
+        is_turnover_flag = pd.Series(False, index=df.index)
+    else:
+        is_turnover_flag = is_turnover_col.fillna(0).astype(int) == 1
+    is_off_foul = (fam == "foul") & is_turnover_flag
+
     df["is_turnover_live"] = is_tov_family & (is_steal_flag | sub_live_flag)
-    df["is_turnover_dead"] = is_tov_family & ~df["is_turnover_live"]
+    df["is_turnover_dead"] = (is_tov_family & ~df["is_turnover_live"]) | is_off_foul
 
     # --- Foul flavors ---
     is_foul_family = fam == "foul"
@@ -626,7 +634,12 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
         if row.get("is_d_rebound") == 1:
             _increment_count(counts[key], "DREB")
 
-        if row.get("family") == "turnover" and _valid_player_id(player_id):
+        # Include explicit turnovers AND fouls flagged as turnovers (offensive fouls)
+        is_turnover = (
+            row.get("family") == "turnover"
+            or (row.get("family") == "foul" and row.get("is_turnover") == 1)
+        )
+        if is_turnover and _valid_player_id(player_id):
             _increment_count(counts[key], "TOV")
             if row.get("is_turnover_live"):
                 _increment_count(counts[key], "TOV_Live")
