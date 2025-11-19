@@ -1,35 +1,24 @@
---- Core Data & Numerics ---
+atomicwrites==1.3.0
+attrs==19.1.0
+certifi==2019.3.9
+chardet==3.0.4
+codecov==2.0.15
+coverage==4.5.3
+idna==2.8
+more-itertools==7.0.0
+numpy==1.16.3
+pandas==0.24.2
+pluggy==0.11.0
+py==1.10.0
+pytest==4.4.1
+pytest-cov==2.7.1
+python-dateutil==2.8.0
+pytz==2019.1
+requests==2.21.0
+six==1.12.0
+urllib3==1.26.5
 
-pandas>=2.0.0
-numpy>=1.24.0
+pyyaml==5.3.1
 
---- Scraping & Network (Inherited from nba_scraper) ---
-
-requests>=2.31.0
-urllib3>=2.0.0
-PyYAML>=6.0
-
---- Analytics & Storage (Inherited from nba_parser) ---
-
-scikit-learn is used for Ridge Regression in RAPM calculations
-
-scikit-learn>=1.3.0
-
-SQLAlchemy is used if you plan to dump stats to a local DB
-
-SQLAlchemy>=2.0.0
-
---- Development & Testing ---
-
-Essential for the Agent to run tests and format code
-
-pytest>=7.4.0
-black>=23.0.0
-ruff>=0.1.0
-
---- Typing ---
-
-Helps the Agent understand external library types
-
-types-requests
-types-PyYAML
+# Use the latest upstream nba_parser implementation from the default branch.
+nba_parser @ git+https://github.com/kmedved/nba_parser@master
