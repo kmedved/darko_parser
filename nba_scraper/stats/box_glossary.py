@@ -1576,7 +1576,10 @@ def append_team_totals(box_df: pd.DataFrame) -> pd.DataFrame:
       - Sums counting stats and minutes across players.
       - Sums POSS_OFF / POSS_DEF and recomputes key rate stats from those sums.
       - Sets identifier fields (NbaDotComID, PlayerID, etc.) to the team_id and
-        labels Team/FullName/Player_Team as 'TOTAL'.
+        labels Team/FullName/Player_Team as 'TOTAL'. For these rows the
+        personId-oriented fields do **not** represent an individual player; they
+        are keyed to the team_id so downstream joins can deterministically link
+        the aggregate row back to its team.
 
     You may want to tweak which columns are summed vs averaged depending on your
     use case.

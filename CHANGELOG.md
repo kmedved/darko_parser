@@ -6,6 +6,7 @@
 * Switched to installing `nba_parser` directly from the upstream `kmedved/nba_parser` default branch instead of bundling a pinned copy.
 * Removed the deprecated team totals RAPM helper (`team_rapm_results`) and the scikit-learn optional extra; the library now focuses on parsing RAPM-ready possession data and expects downstream tooling to run regressions.
 * Fully removed the legacy team totals helper and its tests now that `player_box_glossary_with_totals` surfaces team-level aggregation.
+* `player_box_glossary` now always appends team TOTAL rows keyed by `team_id` (including ID fields like `player_id`/`NbaDotComID`); filter `Player_Team != "TOTAL"` for player-only views.
 
 ## 1.2.2
 

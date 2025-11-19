@@ -933,8 +933,11 @@ class PbP:
         player_game_meta: pd.DataFrame | None = None,
     ) -> pd.DataFrame:
         """
-        Convenience wrapper: build the per-player glossary box and append one
-        'TOTAL' row per (game_id, team_id).
+        Backwards-compatible alias for ``player_box_glossary``.
+
+        The base ``player_box_glossary`` already appends one ``'TOTAL'`` row per
+        ``(game_id, team_id)``, so this helper simply forwards to it for callers
+        that still use the old name.
         """
         box = self.player_box_glossary(
             player_meta=player_meta,
