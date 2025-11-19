@@ -171,7 +171,7 @@ class PbP:
             # calculating turnover possessions
             self.df["home_possession"] = np.where(
                 (self.df.event_team == self.df.home_team_abbrev)
-                & (self.df.event_type_de == "turnover"),
+                & ((self.df.event_type_de == "turnover") | (self.df.get("is_turnover") == 1)),
                 1,
                 self.df["home_possession"],
             )
@@ -248,7 +248,7 @@ class PbP:
             # calculating turnover possessions (Away)
             self.df["away_possession"] = np.where(
                 (self.df.event_team == self.df.away_team_abbrev)
-                & (self.df.event_type_de == "turnover"),
+                & ((self.df.event_type_de == "turnover") | (self.df.get("is_turnover") == 1)),
                 1,
                 self.df["away_possession"],
             )
@@ -325,6 +325,8 @@ class PbP:
         # - rebound: depends on OREB/DREB flags
         # - fallback: treat event_team as offense
         if ev_type in ("shot", "miss_shot", "missed_shot", "free_throw", "turnover"):
+            off_abbrev = ev_team
+        elif ev_type == "foul" and last_event.get("is_turnover") == 1:
             off_abbrev = ev_team
         elif ev_type == "rebound":
             # Check rebound type flags (Critical Fix)
@@ -443,6 +445,10 @@ class PbP:
             # Normalize event "family" for robust CDN/v2 handling.
             if "family" in df.columns:
                 fam = df["family"].fillna("").astype(str).str.lower()
+                # Treat offensive fouls (is_turnover=1) as turnovers for possession splitting
+                if "is_turnover" in df.columns:
+                    is_tov = df["is_turnover"].fillna(0).astype(int) == 1
+                    fam = fam.where(~((fam == "foul") & is_tov), "turnover")
             else:
                 et = df.get("event_type_de")
                 if et is None:
@@ -567,6 +573,10 @@ class PbP:
             # to a normalized event_type_de.
             if "family" in seg.columns:
                 fam = seg["family"].fillna("").astype(str).str.lower()
+                # Treat offensive fouls (is_turnover=1) as turnovers for possession splitting
+                if "is_turnover" in seg.columns:
+                    is_tov = seg["is_turnover"].fillna(0).astype(int) == 1
+                    fam = fam.where(~((fam == "foul") & is_tov), "turnover")
             else:
                 et = seg.get("event_type_de")
                 if et is None:
