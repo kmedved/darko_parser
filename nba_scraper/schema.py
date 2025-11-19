@@ -73,6 +73,7 @@ CANONICAL_COLUMNS: List[str] = [
     "is_d_rebound",
     "team_rebound",
     "linked_shot_action_number",
+    "possession_raw",
     "possession_after",
     "score_home",
     "score_away",

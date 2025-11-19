@@ -94,6 +94,46 @@ def test_cdn_parse_basic():
     assert shot_row["is_block"] == 1
 
 
+def test_cdn_possession_tokens_normalized_to_team_ids():
+    home_id = 111
+    away_id = 222
+
+    pbp = {
+        "game": {
+            "gameId": "test-game",
+            "actions": [
+                {
+                    "actionNumber": 1,
+                    "orderNumber": 1,
+                    "period": 1,
+                    "clock": "PT12M0S",
+                    "timeActual": "2024-01-01T00:00:00Z",
+                    "teamId": home_id,
+                    "teamTricode": "HME",
+                    "personId": 10,
+                    "actionType": "jumpball",
+                    "descriptor": "",
+                    "possession": "home",
+                    "scoreHome": "0",
+                    "scoreAway": "0",
+                }
+            ],
+        }
+    }
+
+    box = {
+        "game": {
+            "gameId": "test-game",
+            "gameTimeUTC": "2024-01-01T00:00:00Z",
+            "homeTeam": {"teamId": home_id, "teamTricode": "HME", "players": []},
+            "awayTeam": {"teamId": away_id, "teamTricode": "AWY", "players": []},
+        }
+    }
+
+    df = cdn_parser.parse_actions_to_rows(pbp, box)
+    assert df.loc[0, "possession_after"] == home_id
+
+
 def test_cdn_game_date_normalized():
     pbp = _load_json("cdn_playbyplay_0022400001.json")
     box = _load_json("cdn_boxscore_0022400001.json")
