@@ -5,7 +5,7 @@ codecov>=2.1.13
 
 #Use editable install for the local package
 
--e .
+-e ../..
 
 #'neovim' package is deprecated alias; use pynvim
 
