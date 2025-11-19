@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
+from .schema import CANONICAL_COLUMNS
+
 
 def _name_map_from_box_and_pbp(
     box_json: dict, pbp_json: Optional[dict] = None
@@ -426,4 +428,11 @@ def attach_lineups(
             if id_col in df.columns:
                 df[name_col] = df[id_col].map(_lookup_name)
 
-    return df
+    ordered_columns = [
+        *(col for col in CANONICAL_COLUMNS if col in df.columns),
+        *(col for col in _LINEUP_ID_COLUMNS if col in df.columns),
+        *(col for col in _LINEUP_NAME_COLUMNS if col in df.columns),
+    ]
+    remaining_columns = [col for col in df.columns if col not in ordered_columns]
+
+    return df[ordered_columns + remaining_columns]
