@@ -126,7 +126,12 @@ class PbP:
 
         # Prefer canonical possession_after when available (CDN + modern schema),
         # fall back to legacy text-based heuristics otherwise.
-        if "possession_after" in self.df.columns and self.df["possession_after"].notna().any():
+        has_possession_after = False
+        if "possession_after" in self.df.columns:
+            pos_numeric = pd.to_numeric(self.df["possession_after"], errors="coerce")
+            has_possession_after = pos_numeric.isin([self.home_team_id, self.away_team_id]).any()
+
+        if has_possession_after:
             # Start with zeros.
             self.df["home_possession"] = 0
             self.df["away_possession"] = 0

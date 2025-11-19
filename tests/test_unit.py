@@ -15,6 +15,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from nba_scraper import cdn_parser, io_sources, lineup_builder, v2_parser
 from nba_scraper.mapping import event_codebook, normalize_descriptor
 from nba_scraper.parser_utils import infer_possession_after
+from nba_scraper.stats.pbp import PbP
 
 FIXTURES = Path(__file__).parent / "test_files"
 
@@ -826,3 +827,51 @@ def test_possession_inference_handles_mixed_sequence():
 
     expected = [away, away, home, away, away, away, home]
     assert list(df["possession_after"]) == expected
+
+
+def test_possession_flags_fallback_when_feed_empty():
+    df = pd.DataFrame(
+        [
+            {
+                "game_id": 22200001,
+                "period": 1,
+                "seconds_elapsed": 0,
+                "eventnum": 1,
+                "event_type_de": "shot",
+                "event_team": "HOME",
+                "home_team_abbrev": "HOME",
+                "away_team_abbrev": "AWAY",
+                "home_team_id": 10,
+                "away_team_id": 20,
+                "season": "2024",
+                "game_date": pd.Timestamp("2024-01-01"),
+                "is_d_rebound": 0,
+                "is_o_rebound": 0,
+                "scoremargin": "0",
+                "possession_after": 0,
+            },
+            {
+                "game_id": 22200001,
+                "period": 1,
+                "seconds_elapsed": 10,
+                "eventnum": 2,
+                "event_type_de": "turnover",
+                "event_team": "AWAY",
+                "home_team_abbrev": "HOME",
+                "away_team_abbrev": "AWAY",
+                "home_team_id": 10,
+                "away_team_id": 20,
+                "season": "2024",
+                "game_date": pd.Timestamp("2024-01-01"),
+                "is_d_rebound": 0,
+                "is_o_rebound": 0,
+                "scoremargin": "0",
+                "possession_after": None,
+            },
+        ]
+    )
+
+    result = PbP(df).df
+
+    assert result["home_possession"].sum() == 1
+    assert result["away_possession"].sum() == 1
