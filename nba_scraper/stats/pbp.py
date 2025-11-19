@@ -334,10 +334,14 @@ class PbP:
         # - shot / free_throw / turnover: offense is event_team
         # - rebound: depends on OREB/DREB flags
         # - fallback: treat event_team as offense
-        if ev_type in ("shot", "miss_shot", "missed_shot", "free_throw", "turnover"):
+        if ev_type == "jump_ball" or ev_type == "jumpball":
+            # Possession logic for jump balls is tricky, but generally the
+            # 'event_team' in V2/CDN for a jump ball is the team that WON the tip.
+            off_abbrev = ev_team
+        elif ev_type in ("shot", "miss_shot", "missed_shot", "free_throw", "turnover"):
             off_abbrev = ev_team
         elif ev_type == "rebound":
-            # Check rebound type flags (Critical Fix)
+            # (Keep existing rebound logic)
             is_d_rebound = last_event.get("is_d_rebound") == 1
             is_o_rebound = last_event.get("is_o_rebound") == 1
 

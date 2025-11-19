@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Regression tests ensuring PbP-derived team stats align with box scores."""
+
 import json
 from pathlib import Path
 
