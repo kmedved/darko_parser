@@ -199,6 +199,41 @@ def _score_tuple(action: Dict[str, Any]) -> Tuple[Optional[int], Optional[int]]:
     return _maybe_int(home_raw), _maybe_int(away_raw)
 
 
+def _possession_team_id(
+    action: Dict[str, Any],
+    home_team_id: Optional[int],
+    away_team_id: Optional[int],
+    home_tri: str,
+    away_tri: str,
+) -> Optional[int]:
+    raw = action.get("possession")
+    if raw is None:
+        return None
+
+    team_id = int_or_zero(raw)
+    if team_id:
+        return team_id
+
+    if isinstance(raw, str):
+        token = raw.strip()
+        if not token:
+            return None
+
+        lowered = token.lower()
+        if lowered == "home":
+            return int_or_zero(home_team_id) or None
+        if lowered == "away":
+            return int_or_zero(away_team_id) or None
+
+        upper_token = token.upper()
+        if home_tri and upper_token == home_tri.upper():
+            return int_or_zero(home_team_id) or None
+        if away_tri and upper_token == away_tri.upper():
+            return int_or_zero(away_team_id) or None
+
+    return None
+
+
 def _team_meta(box_json: Dict[str, Any]) -> Tuple[int, str, int, str, str]:
     game_meta = box_json.get("game", {})
     home = game_meta.get("homeTeam", {})
@@ -403,7 +438,9 @@ def parse_actions_to_rows(
             if (family == "rebound" and action.get("personId") in (0, None))
             else 0,
             "linked_shot_action_number": action.get("shotActionNumber"),
-            "possession_after": action.get("possession"),
+            "possession_after": _possession_team_id(
+                action, home_id, away_id, home_tri or "", away_tri or ""
+            ),
             "score_home": score_home,
             "score_away": score_away,
             "scoremargin": scoremargin_str(score_home, score_away),
