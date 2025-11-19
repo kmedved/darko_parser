@@ -125,8 +125,17 @@ class PbP:
         # possessions. These columns are kept for backwards compatibility.
 
         # Prefer canonical possession_after when available (CDN + modern schema),
-        # fall back to legacy text-based heuristics otherwise.
-        if "possession_after" in self.df.columns and self.df["possession_after"].notna().any():
+        # fall back to legacy text-based heuristics otherwise. Only rely on
+        # possession_after when it contains at least one valid home/away team id;
+        # otherwise, keep the legacy heuristics to avoid empty possession flags.
+        use_possession_after = False
+        pos_numeric = None
+        if "possession_after" in self.df.columns:
+            pos_numeric = pd.to_numeric(self.df["possession_after"], errors="coerce")
+            valid_owner_mask = pos_numeric.isin([self.home_team_id, self.away_team_id])
+            use_possession_after = bool(valid_owner_mask.any())
+
+        if use_possession_after:
             # Start with zeros.
             self.df["home_possession"] = 0
             self.df["away_possession"] = 0
@@ -134,7 +143,7 @@ class PbP:
             home_id = self.home_team_id
             away_id = self.away_team_id
 
-            pos_raw = self.df["possession_after"]
+            pos_raw = pos_numeric
 
             # Normalize: treat only home/away IDs as valid possession owners.
             # Forward-fill to cover sequences of events where possession doesn't change.
@@ -324,7 +333,11 @@ class PbP:
         # - shot / free_throw / turnover: offense is event_team
         # - rebound: depends on OREB/DREB flags
         # - fallback: treat event_team as offense
-        if ev_type in ("shot", "miss_shot", "missed_shot", "free_throw", "turnover"):
+        if ev_type == "jump_ball" or ev_type == "jumpball":
+            # Possession logic for jump balls is tricky, but generally the
+            # 'event_team' in V2/CDN for a jump ball is the team that WON the tip.
+            off_abbrev = ev_team
+        elif ev_type in ("shot", "miss_shot", "missed_shot", "free_throw", "turnover"):
             off_abbrev = ev_team
         elif ev_type == "rebound":
             # Check rebound type flags (Critical Fix)

@@ -199,6 +199,58 @@ def _score_tuple(action: Dict[str, Any]) -> Tuple[Optional[int], Optional[int]]:
     return _maybe_int(home_raw), _maybe_int(away_raw)
 
 
+def _normalize_possession_owner(
+    possession: Any,
+    *,
+    home_id: Any,
+    away_id: Any,
+    home_tri: str,
+    away_tri: str,
+) -> Optional[int]:
+    """
+    Coerce CDN possession tokens into concrete team IDs when possible.
+
+    Accepts numeric IDs, "home"/"away" aliases, and tricodes that match the
+    home/away abbreviations. Returns None when no reliable mapping exists.
+    """
+
+    def _as_team_id(value: Any) -> Optional[int]:
+        val = int_or_zero(value)
+        return val or None
+
+    home_team_id = _as_team_id(home_id)
+    away_team_id = _as_team_id(away_id)
+    home_tri_norm = (home_tri or "").upper()
+    away_tri_norm = (away_tri or "").upper()
+
+    if possession in (None, "", " "):
+        return None
+
+    numeric = _as_team_id(possession)
+    if numeric:
+        return numeric
+
+    # Handle string tokens (home/away or tricodes)
+    if isinstance(possession, str):
+        token = possession.strip()
+        lower = token.lower()
+        upper = token.upper()
+
+        if lower == "home":
+            return home_team_id
+        if lower == "away":
+            return away_team_id
+
+        if home_tri_norm and upper == home_tri_norm:
+            return home_team_id
+        if away_tri_norm and upper == away_tri_norm:
+            return away_team_id
+
+        return None
+
+    return None
+
+
 def _team_meta(box_json: Dict[str, Any]) -> Tuple[int, str, int, str, str]:
     game_meta = box_json.get("game", {})
     home = game_meta.get("homeTeam", {})
@@ -302,6 +354,15 @@ def parse_actions_to_rows(
                 event_team = person_to_tri.get(primary_player_id, "")
         opp_team_id = _opponent_team_id(team_id_int, home_id, away_id)
 
+        possession_raw = action.get("possession")
+        possession_normalized = _normalize_possession_owner(
+            possession_raw,
+            home_id=home_id,
+            away_id=away_id,
+            home_tri=home_tri or "",
+            away_tri=away_tri or "",
+        )
+
         # Some newer CDN feeds attach block info directly to the shot action
         # instead of (or in addition to) a separate "block" sidecar row.
         block_pid_direct = int_or_zero(
@@ -403,7 +464,8 @@ def parse_actions_to_rows(
             if (family == "rebound" and action.get("personId") in (0, None))
             else 0,
             "linked_shot_action_number": action.get("shotActionNumber"),
-            "possession_after": action.get("possession"),
+            "possession_raw": possession_raw,
+            "possession_after": possession_normalized,
             "score_home": score_home,
             "score_away": score_away,
             "scoremargin": scoremargin_str(score_home, score_away),

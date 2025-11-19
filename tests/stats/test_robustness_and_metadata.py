@@ -37,6 +37,191 @@ def test_robust_team_id_normalization():
     assert annotated["team_id"].tolist() == [1, 2, 1]
 
 
+def test_possession_after_guard_falls_back_to_legacy_flags():
+    home_id = 10
+    away_id = 20
+
+    df = pd.DataFrame(
+        [
+            {
+                "game_id": 12345678,
+                "period": 1,
+                "pctimestring": "12:00",
+                "seconds_elapsed": 0,
+                "event_type_de": "shot",
+                "family": "shot",
+                "event_team": "HOM",
+                "team_id": home_id,
+                "home_team_abbrev": "HOM",
+                "away_team_abbrev": "AWY",
+                "home_team_id": home_id,
+                "away_team_id": away_id,
+                "game_date": "2024-01-01",
+                "season": 2024,
+                "scoremargin": 0,
+                "possession_after": 0,
+                "is_d_rebound": 0,
+                "is_o_rebound": 0,
+            },
+            {
+                "game_id": 12345678,
+                "period": 1,
+                "pctimestring": "11:59",
+                "seconds_elapsed": 1,
+                "event_type_de": "turnover",
+                "family": "turnover",
+                "event_team": "AWY",
+                "team_id": away_id,
+                "home_team_abbrev": "HOM",
+                "away_team_abbrev": "AWY",
+                "home_team_id": home_id,
+                "away_team_id": away_id,
+                "game_date": "2024-01-01",
+                "season": 2024,
+                "scoremargin": 0,
+                "possession_after": None,
+                "is_d_rebound": 0,
+                "is_o_rebound": 0,
+            },
+        ]
+    )
+
+    pbp = PbP(df)
+
+    assert pbp.df["home_possession"].sum() == 1
+    assert pbp.df["away_possession"].sum() == 1
+
+
+def test_possession_after_zero_nan_still_flags_possessions():
+    home_id = 30
+    away_id = 40
+
+    df = pd.DataFrame(
+        [
+            {
+                "game_id": 9876543,
+                "period": 1,
+                "pctimestring": "12:00",
+                "seconds_elapsed": 0,
+                "event_type_de": "shot",
+                "family": "shot",
+                "event_team": "HOM",
+                "team_id": home_id,
+                "home_team_abbrev": "HOM",
+                "away_team_abbrev": "AWY",
+                "home_team_id": home_id,
+                "away_team_id": away_id,
+                "game_date": "2024-01-01",
+                "season": 2024,
+                "scoremargin": 0,
+                "possession_after": 0,
+                "is_d_rebound": 0,
+                "is_o_rebound": 0,
+            },
+            {
+                "game_id": 9876543,
+                "period": 1,
+                "pctimestring": "11:59",
+                "seconds_elapsed": 1,
+                "event_type_de": "turnover",
+                "family": "turnover",
+                "event_team": "AWY",
+                "team_id": away_id,
+                "home_team_abbrev": "HOM",
+                "away_team_abbrev": "AWY",
+                "home_team_id": home_id,
+                "away_team_id": away_id,
+                "game_date": "2024-01-01",
+                "season": 2024,
+                "scoremargin": 0,
+                "possession_after": np.nan,
+                "is_d_rebound": 0,
+                "is_o_rebound": 0,
+            },
+        ]
+    )
+
+    pbp = PbP(df)
+
+    assert pbp.df["home_possession"].sum() == 1
+    assert pbp.df["away_possession"].sum() == 1
+
+
+def test_possession_after_only_zero_nan_defaults_to_heuristics():
+    home_id = 50
+    away_id = 60
+
+    df = pd.DataFrame(
+        [
+            {
+                "game_id": 24681012,
+                "period": 1,
+                "pctimestring": "12:00",
+                "seconds_elapsed": 0,
+                "event_type_de": "shot",
+                "family": "shot",
+                "event_team": "HOM",
+                "team_id": home_id,
+                "home_team_abbrev": "HOM",
+                "away_team_abbrev": "AWY",
+                "home_team_id": home_id,
+                "away_team_id": away_id,
+                "game_date": "2024-01-01",
+                "season": 2024,
+                "scoremargin": 0,
+                "possession_after": 0,
+                "is_d_rebound": 0,
+                "is_o_rebound": 0,
+            },
+            {
+                "game_id": 24681012,
+                "period": 1,
+                "pctimestring": "11:58",
+                "seconds_elapsed": 2,
+                "event_type_de": "turnover",
+                "family": "turnover",
+                "event_team": "AWY",
+                "team_id": away_id,
+                "home_team_abbrev": "HOM",
+                "away_team_abbrev": "AWY",
+                "home_team_id": home_id,
+                "away_team_id": away_id,
+                "game_date": "2024-01-01",
+                "season": 2024,
+                "scoremargin": 0,
+                "possession_after": np.nan,
+                "is_d_rebound": 0,
+                "is_o_rebound": 0,
+            },
+            {
+                "game_id": 24681012,
+                "period": 1,
+                "pctimestring": "11:56",
+                "seconds_elapsed": 4,
+                "event_type_de": "turnover",
+                "family": "turnover",
+                "event_team": "HOM",
+                "team_id": home_id,
+                "home_team_abbrev": "HOM",
+                "away_team_abbrev": "AWY",
+                "home_team_id": home_id,
+                "away_team_id": away_id,
+                "game_date": "2024-01-01",
+                "season": 2024,
+                "scoremargin": 0,
+                "possession_after": 0,
+                "is_d_rebound": 0,
+                "is_o_rebound": 0,
+            },
+        ]
+    )
+
+    pbp = PbP(df)
+
+    assert pbp.df["home_possession"].tolist() == [1, 0, 1]
+    assert pbp.df["away_possession"].tolist() == [0, 1, 0]
+
+
 def test_compute_starters(pbp_v2_game):
     """Validates Change 3: Starters are correctly identified."""
     box = pbp_v2_game.player_box_glossary()
