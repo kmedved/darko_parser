@@ -116,7 +116,22 @@ def test_cdn_possession_tokens_normalized_to_team_ids():
                     "possession": "home",
                     "scoreHome": "0",
                     "scoreAway": "0",
-                }
+                },
+                {
+                    "actionNumber": 2,
+                    "orderNumber": 2,
+                    "period": 1,
+                    "clock": "PT11M59S",
+                    "timeActual": "2024-01-01T00:00:01Z",
+                    "teamId": away_id,
+                    "teamTricode": "AWY",
+                    "personId": 20,
+                    "actionType": "jumpball",
+                    "descriptor": "",
+                    "possession": "AWY",
+                    "scoreHome": "0",
+                    "scoreAway": "0",
+                },
             ],
         }
     }
@@ -131,7 +146,9 @@ def test_cdn_possession_tokens_normalized_to_team_ids():
     }
 
     df = cdn_parser.parse_actions_to_rows(pbp, box)
-    assert df.loc[0, "possession_after"] == home_id
+    assert list(df["possession_after"]) == [home_id, away_id]
+
+    assert (cdn_parser._normalize_possession_owner("bogus", home_id=home_id, away_id=away_id, home_tri="HME", away_tri="AWY") is None)
 
 
 def test_cdn_game_date_normalized():
