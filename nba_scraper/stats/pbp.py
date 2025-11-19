@@ -118,23 +118,24 @@ class PbP:
         # calculating home and away possesions to later aggregate for players
         # and teams
 
-        # NOTE: The home_possession / away_possession flags below implement the
-        # original v2-era heuristics for detecting possession boundaries. New
-        # possession-based analysis (RAPM, on/off exposures, etc.) should prefer
-        # the _build_possessions() output as the canonical representation of
-        # possessions. These columns are kept for backwards compatibility.
+        # calculating home and away possesions to later aggregate for players
+        # and teams
 
-        # Prefer canonical possession_after when available (CDN + modern schema),
-        # fall back to legacy text-based heuristics otherwise.
-        if "possession_after" in self.df.columns and self.df["possession_after"].notna().any():
-            # Start with zeros.
-            self.df["home_possession"] = 0
-            self.df["away_possession"] = 0
+        # NOTE: The home_possession / away_possession flags below are now always
+        # derived from the canonical possession_after column, which is
+        # guaranteed to be present (or inferred) in the input DataFrame.
+        # New analysis should prefer rapm_possessions() / _build_possessions().
 
-            home_id = self.home_team_id
-            away_id = self.away_team_id
+        # Start with zeros.
+        self.df["home_possession"] = 0
+        self.df["away_possession"] = 0
 
-            pos_raw = self.df["possession_after"]
+        home_id = self.home_team_id
+        away_id = self.away_team_id
+
+        if "possession_after" in self.df.columns:
+            # Ensure numeric for consistent comparison
+            pos_raw = pd.to_numeric(self.df["possession_after"], errors="coerce")
 
             # Normalize: treat only home/away IDs as valid possession owners.
             # Forward-fill to cover sequences of events where possession doesn't change.
@@ -156,128 +157,6 @@ class PbP:
 
             self.df.loc[home_pos_idx, "home_possession"] = 1
             self.df.loc[away_pos_idx, "away_possession"] = 1
-
-        else:
-            # --- LEGACY HEURISTIC POSSESSION FLAGS (existing v2-style code path) ---
-
-            # calculating made shot possessions
-            self.df["home_possession"] = np.where(
-                (self.df.event_team == self.df.home_team_abbrev)
-                & (self.df.event_type_de == "shot"),
-                1,
-                0,
-            )
-
-            # calculating turnover possessions
-            self.df["home_possession"] = np.where(
-                (self.df.event_team == self.df.home_team_abbrev)
-                & (self.df.event_type_de == "turnover"),
-                1,
-                self.df["home_possession"],
-            )
-
-            # calculating defensive rebound possessions
-            self.df["home_possession"] = np.where(
-                (
-                    (self.df.event_team == self.df.away_team_abbrev)
-                    & (self.df.is_d_rebound == 1)
-                )
-                | (
-                    (self.df.event_type_de == "rebound")
-                    & (self.df.is_d_rebound == 0)
-                    & (self.df.is_o_rebound == 0)
-                    & (self.df.event_team == self.df.away_team_abbrev)
-                    & (self.df.event_type_de.shift(1) != "free-throw")
-                ),
-                1,
-                self.df["home_possession"],
-            )
-
-            # Determine if it's the last free throw using structured data if available
-            is_last_ft = pd.Series(False, index=self.df.index)
-
-            # Ensure descriptions are treated as strings and handle NaNs
-            homedesc = self.df.get("homedescription", pd.Series(index=self.df.index)).fillna("").astype(str)
-            visitordesc = self.df.get("visitordescription", pd.Series(index=self.df.index)).fillna("").astype(str)
-
-            # Heuristic fallback using string matching
-            string_match_last_ft = (
-                homedesc.str.contains("Free Throw 1 of 1")
-                | homedesc.str.contains("Free Throw 2 of 2")
-                | homedesc.str.contains("Free Throw 3 of 3")
-                | visitordesc.str.contains("Free Throw 1 of 1")
-                | visitordesc.str.contains("Free Throw 2 of 2")
-                | visitordesc.str.contains("Free Throw 3 of 3")
-            )
-
-            if "ft_n" in self.df.columns and "ft_m" in self.df.columns:
-                try:
-                    ft_n = self.df["ft_n"].fillna(0).astype(int)
-                    ft_m = self.df["ft_m"].fillna(0).astype(int)
-                    structured_last_ft = (ft_n == ft_m) & (ft_n > 0)
-                    # Use structured data if valid, otherwise fallback to string match
-                    is_last_ft = np.where(
-                        (ft_n > 0) & (ft_m > 0),
-                        structured_last_ft,
-                        string_match_last_ft,
-                    )
-                except (ValueError, TypeError):
-                    # Fallback if structured data is malformed
-                    is_last_ft = string_match_last_ft
-            else:
-                # Fallback if columns are missing
-                is_last_ft = string_match_last_ft
-
-            # calculating final free throw possessions (Home)
-            self.df["home_possession"] = np.where(
-                (self.df.event_team == self.df.home_team_abbrev)
-                & (self.df.event_type_de == "free-throw")
-                & is_last_ft,
-                1,
-                self.df["home_possession"],
-            )
-
-            # calculating made shot possessions (Away)
-            self.df["away_possession"] = np.where(
-                (self.df.event_team == self.df.away_team_abbrev)
-                & (self.df.event_type_de == "shot"),
-                1,
-                0,
-            )
-
-            # calculating turnover possessions (Away)
-            self.df["away_possession"] = np.where(
-                (self.df.event_team == self.df.away_team_abbrev)
-                & (self.df.event_type_de == "turnover"),
-                1,
-                self.df["away_possession"],
-            )
-
-            # calculating defensive rebound possessions (Away)
-            self.df["away_possession"] = np.where(
-                (
-                    (self.df.event_team == self.df.home_team_abbrev)
-                    & (self.df.is_d_rebound == 1)
-                )
-                | (
-                    (self.df.event_type_de == "rebound")
-                    & (self.df.is_d_rebound == 0)
-                    & (self.df.is_o_rebound == 0)
-                    & (self.df.event_team == self.df.home_team_abbrev)
-                    & (self.df.event_type_de.shift(1) != "free-throw")
-                ),
-                1,
-                self.df["away_possession"],
-            )
-
-            # calculating final free throw possessions (Away)
-            self.df["away_possession"] = np.where(
-                (self.df.event_team == self.df.away_team_abbrev)
-                & (self.df.event_type_de == "free-throw")
-                & is_last_ft,
-                1,
-                self.df["away_possession"],
-            )
 
 
 
