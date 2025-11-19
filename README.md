@@ -68,12 +68,14 @@ module import.
 
 The canonical dataframe can be passed straight into
 [`nba_parser`](https://github.com/kmedved/nba_parser) for advanced possession and
-box score calculations. `nba_scraper` now installs `nba_parser` directly from
-the upstream default (`master`) branch to ensure you always have the latest
-compatibility fixes:
+box score calculations. `nba_scraper` produces a canonical dataframe compatible
+with the external `nba_parser` package—install `nba_parser` separately if you
+want to use its APIs:
 
 ```python
 from pathlib import Path
+
+# Requires: pip install nba_parser
 
 from nba_scraper import io_sources, lineup_builder
 from nba_parser import PbP
