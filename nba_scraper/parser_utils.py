@@ -81,6 +81,14 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
     """
     Fill in possession_after so it reflects who has the ball *after* each event.
 
+    For CDN data, possession_after is the canonical "team that will have the ball
+    after this event" marker, derived from either the feed's possession token
+    (when provided) or the heuristics below. Downstream consumers (e.g.,
+    nba_scraper.stats.PbP) will only derive home/away possession flags from this
+    column when it contains at least one home_team_id or away_team_id value;
+    otherwise they fall back to legacy v2 heuristics. This guard keeps
+    possession flags populated when feeds omit usable possession owners.
+
     Heuristics:
       - Turnover (eventmsgtype 5): flip to opponent(team_id).
       - Made 2PT/3PT (family '2pt'/'3pt' and shot_made == 1): flip to opponent(team_id).

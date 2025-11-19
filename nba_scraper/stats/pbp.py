@@ -125,8 +125,18 @@ class PbP:
         # possessions. These columns are kept for backwards compatibility.
 
         # Prefer canonical possession_after when available (CDN + modern schema),
-        # fall back to legacy text-based heuristics otherwise.
-        if "possession_after" in self.df.columns and self.df["possession_after"].notna().any():
+        # fall back to legacy text-based heuristics otherwise. Only rely on
+        # possession_after when it contains at least one valid home/away team id;
+        # otherwise, keep the legacy heuristics to avoid empty possession flags.
+        use_possession_after = False
+        pos_numeric = None
+        if "possession_after" in self.df.columns:
+            pos_numeric = pd.to_numeric(self.df["possession_after"], errors="coerce")
+            has_values = pos_numeric.notna().any()
+            has_owner = pos_numeric.isin([self.home_team_id, self.away_team_id]).any()
+            use_possession_after = has_values and has_owner
+
+        if use_possession_after:
             # Start with zeros.
             self.df["home_possession"] = 0
             self.df["away_possession"] = 0
@@ -134,7 +144,7 @@ class PbP:
             home_id = self.home_team_id
             away_id = self.away_team_id
 
-            pos_raw = self.df["possession_after"]
+            pos_raw = pos_numeric
 
             # Normalize: treat only home/away IDs as valid possession owners.
             # Forward-fill to cover sequences of events where possession doesn't change.
