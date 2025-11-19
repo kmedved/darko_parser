@@ -218,8 +218,17 @@ def _normalize_possession_owner(
         val = int_or_zero(value)
         return val or None
 
+    home_team_id = _as_team_id(home_id)
+    away_team_id = _as_team_id(away_id)
+    home_tri_norm = (home_tri or "").upper()
+    away_tri_norm = (away_tri or "").upper()
+
     if possession in (None, "", " "):
         return None
+
+    numeric = _as_team_id(possession)
+    if numeric:
+        return numeric
 
     # Handle string tokens (home/away or tricodes)
     if isinstance(possession, str):
@@ -228,25 +237,17 @@ def _normalize_possession_owner(
         upper = token.upper()
 
         if lower == "home":
-            return _as_team_id(home_id)
+            return home_team_id
         if lower == "away":
-            return _as_team_id(away_id)
+            return away_team_id
 
-        if home_tri and upper == (home_tri or "").upper():
-            return _as_team_id(home_id)
-        if away_tri and upper == (away_tri or "").upper():
-            return _as_team_id(away_id)
+        if home_tri_norm and upper == home_tri_norm:
+            return home_team_id
+        if away_tri_norm and upper == away_tri_norm:
+            return away_team_id
 
-        # Fall back to numeric strings
-        numeric = _as_team_id(token)
-        if numeric:
-            return numeric
         return None
 
-    # Direct numeric input
-    numeric = _as_team_id(possession)
-    if numeric:
-        return numeric
     return None
 
 
