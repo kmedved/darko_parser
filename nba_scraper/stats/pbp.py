@@ -324,11 +324,8 @@ class PbP:
         ev_team = last_event.get("event_team")
 
         # Prefer annotated 'family' if available, otherwise use raw event_type_de.
-        ev_type = last_event.get("family") or last_event.get("event_type_de")
-        if isinstance(ev_type, str):
-            ev_type = ev_type.replace("-", "_").lower()
-        else:
-            ev_type = ""
+        ev_type_raw = last_event.get("family") or last_event.get("event_type_de")
+        ev_type = ev_type_raw.replace("-", "_").lower() if isinstance(ev_type_raw, str) else ""
 
         # Default offense/defense mapping mirrors existing _build_possessions logic:
         # - shot / free_throw / turnover: offense is event_team
