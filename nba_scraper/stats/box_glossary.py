@@ -48,6 +48,7 @@ ZONE_BINS: List[Tuple[float, float, str]] = [
     (3.0, 9.0, "4_9"),
     (9.0, 17.0, "10_17"),
     (17.0, 23.0, "18_23"),
+    (23.0, 100.0, "18_23"),
 ]
 
 
@@ -208,7 +209,7 @@ def _vectorized_shot_zone(df: pd.DataFrame) -> pd.Series:
     zones[dist_mask & (shot_distance <= 3.0)] = "0_3"
     zones[dist_mask & (shot_distance > 3.0) & (shot_distance <= 9.0)] = "4_9"
     zones[dist_mask & (shot_distance > 9.0) & (shot_distance <= 17.0)] = "10_17"
-    zones[dist_mask & (shot_distance > 17.0) & (shot_distance <= 23.0)] = "18_23"
+    zones[dist_mask & (shot_distance > 17.0)] = "18_23"
 
     # Fallback to area text where distance-based zone is still missing
     fallback_mask = zones.isna()
@@ -391,7 +392,7 @@ def annotate_events(df: pd.DataFrame) -> pd.DataFrame:
         if dist is not None:
             dist_num = pd.to_numeric(dist, errors="coerce")
             # Conservative threshold; only used when is_three is missing.
-            df["is_three"] = (dist_num >= 23.0) & df["is_fg_attempt"]
+            df["is_three"] = (dist_num >= 22.0) & df["is_fg_attempt"]
         else:
             df["is_three"] = False
 
@@ -479,6 +480,13 @@ def annotate_events(df: pd.DataFrame) -> pd.DataFrame:
     df["def_team_id"] = np.where(home_match, df["away_team_id"], df["home_team_id"])
     df.loc[~off_mask, "def_team_id"] = np.nan
 
+    # Ensure Technical FTs don't count as end-of-trip attempts (dead balls; no rebounds).
+    # Restrict to actual FT rows while leveraging the broader `is_technical` flag
+    # (which also captures action-type encodings) so we don't miss techs without
+    # a subtype string.
+    is_tech_ft = df["is_ft"] & df["is_technical"]
+    df["is_last_ft"] = df["is_last_ft"] & ~is_tech_ft
+
     return df
 
 
@@ -514,7 +522,10 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
 
     for _, row in df.iterrows():
         player_id_raw = row.get("player1_id")
-        player_id = _coerce_id_scalar(player_id_raw) if _valid_player_id(player_id_raw) else None
+
+        # Determine validity. We accept 0 for Team Turnovers.
+        is_valid_player = _valid_player_id(player_id_raw)
+        player_id = _coerce_id_scalar(player_id_raw) if is_valid_player else 0
 
         # Prefer the normalized team_id from annotate_events (event_team +
         # home/away mapping). Fall back to the raw player1_team_id when the
@@ -525,12 +536,10 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
         team_id = _coerce_id_scalar(team_id)
         game_id = _coerce_id_scalar(row.get("game_id"))
 
-        if not _valid_player_id(player_id):
-            player_id = None
-
+        # If valid player, use their ID. If invalid (Team event), use 0.
         key = (game_id, team_id, player_id)
 
-        if row.get("is_fg_attempt"):
+        if row.get("is_fg_attempt") and is_valid_player:
             is_make = bool(row.get("is_fg_make"))
             is_three = bool(row.get("is_three"))
             zone = row.get("shot_zone")
@@ -579,11 +588,15 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
                 if zone:
                     _increment_count(counts[key], f"{zone}_FGM_AST")
 
-                # Passer-level AST counts (by zone + 3P)
-                # The assister is on the same team as the shooter (player1_team_id)
+                # Passer-level AST counts
+                # FIX: Prefer player2_team_id for the assister to handle edge cases
+                passer_team = row.get("player2_team_id")
+                if not _valid_player_id(passer_team):
+                    passer_team = row.get("player1_team_id")
+
                 ast_key = (
                     game_id,
-                    _coerce_id_scalar(row.get("player1_team_id")),
+                    _coerce_id_scalar(passer_team),
                     _coerce_id_scalar(assist_id),
                 )
                 _increment_count(counts[ast_key], "AST")
@@ -606,7 +619,7 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
                     if is_make:
                         _increment_count(counts[key], f"{zone}_FGM_UNAST")
 
-        if row.get("family") == "free_throw":
+        if row.get("family") == "free_throw" and is_valid_player:
             _increment_count(counts[key], "FTA")
 
             # Mirror legacy logic: prefer shot_made when available, otherwise
@@ -618,22 +631,22 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
             elif row.get("points_made", 0) > 0:
                 _increment_count(counts[key], "FTM")
 
-        if _valid_player_id(player_id):
+        if is_valid_player:
             _increment_count(counts[key], "PTS", row.get("points_made", 0))
 
-        if row.get("is_o_rebound") == 1:
+        if row.get("is_o_rebound") == 1 and is_valid_player:
             _increment_count(counts[key], "OREB")
-        if row.get("is_d_rebound") == 1:
+        if row.get("is_d_rebound") == 1 and is_valid_player:
             _increment_count(counts[key], "DREB")
 
-        if row.get("family") == "turnover" and _valid_player_id(player_id):
+        if row.get("family") == "turnover":
             _increment_count(counts[key], "TOV")
             if row.get("is_turnover_live"):
                 _increment_count(counts[key], "TOV_Live")
             else:
                 _increment_count(counts[key], "TOV_Dead")
 
-        if row.get("family") == "foul" and _valid_player_id(player_id):
+        if row.get("family") == "foul" and is_valid_player:
             # Player 1 commits the foul
             _increment_count(counts[key], "PF")
             if row.get("is_loose_ball_foul"):
@@ -724,7 +737,7 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
 
     records: List[Dict[str, Any]] = []
     for (game_id, team_id, player_id), vals in counts.items():
-        if not _valid_player_id(player_id):
+        if player_id is None:
             continue
         record: Dict[str, Any] = {
             "game_id": game_id,
@@ -1064,7 +1077,7 @@ def build_player_box(
     # Only fill NaNs in numeric columns; leave object/string metadata alone.
     num_cols = merged.select_dtypes(include=["number"]).columns
     merged[num_cols] = merged[num_cols].fillna(0)
-    merged = merged[(merged["team_id"] != 0) & (merged["player_id"] != 0)]
+    merged = merged[merged["team_id"] != 0]
 
     _validate_id_dtypes(merged, context="build_player_box::merged")
 
