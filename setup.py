@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 with open("README.md", "r") as fh:
     long_description = fh.read()
 setup(
-    name="nba_scraper",
+    name="darko_parser",
     packages=find_packages(),
     include_package_data=True,
     version="1.2.2",
