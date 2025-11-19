@@ -132,8 +132,8 @@ class PbP:
         pos_numeric = None
         if "possession_after" in self.df.columns:
             pos_numeric = pd.to_numeric(self.df["possession_after"], errors="coerce")
-            has_owner = pos_numeric.isin([self.home_team_id, self.away_team_id]).any()
-            use_possession_after = has_owner
+            valid_owner_mask = pos_numeric.isin([self.home_team_id, self.away_team_id])
+            use_possession_after = bool(valid_owner_mask.any())
 
         if use_possession_after:
             # Start with zeros.
