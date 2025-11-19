@@ -76,10 +76,10 @@ To install this package just type this at the command line:
 
     pip install nba_scraper
 
-Advanced RAPM tooling depends on scikit-learn and is distributed as an optional
-extra:
-
-    pip install "nba_scraper[rapm]"
+The stats helpers expose RAPM-ready possession data via
+`nba_scraper.stats.PbP.rapm_possessions()`, but the library no longer bundles a
+built-in regression. Bring your own modeling stack if you need RAPM coefficients
+or Ridge regression outputs.
 
 # Usage
 
