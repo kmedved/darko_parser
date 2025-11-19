@@ -159,6 +159,68 @@ def test_v2_game_date_normalized():
     assert len(val) == 10
 
 
+def test_v2_rebound_flags_use_both_descriptions():
+    headers = [
+        "GAME_ID",
+        "EVENTNUM",
+        "EVENTMSGTYPE",
+        "EVENTMSGACTIONTYPE",
+        "PERIOD",
+        "PCTIMESTRING",
+        "HOMEDESCRIPTION",
+        "VISITORDESCRIPTION",
+        "TEAM_ID",
+        "PLAYER1_ID",
+        "PLAYER1_TEAM_ID",
+        "PLAYER1_TEAM_ABBREVIATION",
+        "GAME_DATE",
+    ]
+    row_set = [
+        [
+            "0029999999",
+            1,
+            4,
+            0,
+            1,
+            "12:00",
+            "REBOUND (OFF: TEAM)",
+            "",
+            100,
+            10,
+            100,
+            "HME",
+            "2020-10-10",
+        ],
+        [
+            "0029999999",
+            2,
+            4,
+            0,
+            1,
+            "11:59",
+            "",
+            "REBOUND (DEF: PLAYER)",
+            200,
+            20,
+            200,
+            "AWY",
+            "2020-10-10",
+        ],
+    ]
+    v2 = {"resultSets": [{"headers": headers, "rowSet": row_set}]}
+
+    df = v2_parser.parse_v2_to_rows(v2)
+
+    off_row = df[df["eventnum"] == 1].iloc[0]
+    def_row = df[df["eventnum"] == 2].iloc[0]
+
+    assert off_row["is_o_rebound"] == 1
+    assert off_row["is_d_rebound"] == 0
+    assert def_row["is_d_rebound"] == 1
+    assert def_row["is_o_rebound"] == 0
+    assert def_row["possession_after"] == def_row["team_id"]
+
+
 def test_seconds_elapsed():
     pbp = _load_json("cdn_playbyplay_0022400001.json")
     box = _load_json("cdn_boxscore_0022400001.json")

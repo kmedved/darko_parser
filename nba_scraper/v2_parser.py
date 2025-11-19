@@ -176,6 +176,9 @@ def parse_v2_to_rows(v2_json: Dict, mapping_yaml_path: Optional[str] = None) -> 
         if not player1_team_id and team_id_val is not None:
             player1_team_id = int_or_zero(team_id_val)
         ft_n_val, ft_m_val = _ft_trip_from_text(row)
+        rebound_text = "{} {}".format(
+            row.get("homedescription") or "", row.get("visitordescription") or ""
+        ).upper()
         game_ts = pd.to_datetime(row.get("game_date"), utc=True, errors="coerce")
         season_val = 0
         if game_ts is not None and not pd.isna(game_ts):
@@ -242,8 +245,8 @@ def parse_v2_to_rows(v2_json: Dict, mapping_yaml_path: Optional[str] = None) -> 
             "steal_id": steal_id,
             "style_flags": [],
             "qualifiers": qualifiers_list,
-            "is_o_rebound": 1 if family == "rebound" and "OFF" in str(row.get("homedescription", "")).upper() else 0,
-            "is_d_rebound": 1 if family == "rebound" and "DEF" in str(row.get("homedescription", "")).upper() else 0,
+            "is_o_rebound": 1 if family == "rebound" and "OFF" in rebound_text else 0,
+            "is_d_rebound": 1 if family == "rebound" and "DEF" in rebound_text else 0,
             "team_rebound": 1
             if (family == "rebound" and int_or_zero(row.get("player1_id")) == 0)
             else 0,
