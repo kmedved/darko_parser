@@ -1,5 +1,11 @@
+from pathlib import Path
+import sys
+
 import pandas as pd
-from nba_parser.teamtotals import TeamTotals
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from nba_scraper.stats import TeamTotals
 
 
 def test_team_ft_metrics_match_definitions():
