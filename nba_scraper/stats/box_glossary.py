@@ -1042,7 +1042,6 @@ def build_player_box(
     exposures_df: pd.DataFrame,
     player_meta: Optional[pd.DataFrame] = None,
     game_meta: Optional[pd.DataFrame] = None,
-    restrict_to_pbg: bool = False,
     player_game_meta: Optional[pd.DataFrame] = None,
     strict_invariants: bool = False,
 ) -> pd.DataFrame:
@@ -1187,22 +1186,17 @@ def build_player_box(
             merged[col] = merged[col].fillna(default_val)
 
     # Now that we have DNP/Inactive flags, decide which rows to keep.
-    # - If restrict_to_pbg is True and there are no timing mismatches,
-    #   keep only players with Minutes > 0.
-    # - Otherwise, keep:
-    #     * players with Minutes > 0
-    #     * OR players with non-zero on-court scoring exposure
-    #     * OR players flagged as DNP/Inactive (so they show up on the roster).
-    if restrict_to_pbg and zero_minute_with_points.empty:
-        keep_mask = merged["Minutes"] > 0
-    else:
-        keep_mask = (
-            (merged.get("Minutes", 0) > 0)
-            | (merged.get("OnCourt_Team_Points", 0) != 0)
-            | (merged.get("OnCourt_Opp_Points", 0) != 0)
-            | (merged.get("DNP", 0) != 0)
-            | (merged.get("Inactive", 0) != 0)
-        )
+    # Keep:
+    #   * players with Minutes > 0
+    #   * OR players with non-zero on-court scoring exposure
+    #   * OR players flagged as DNP/Inactive (so they show up on the roster).
+    keep_mask = (
+        (merged.get("Minutes", 0) > 0)
+        | (merged.get("OnCourt_Team_Points", 0) != 0)
+        | (merged.get("OnCourt_Opp_Points", 0) != 0)
+        | (merged.get("DNP", 0) != 0)
+        | (merged.get("Inactive", 0) != 0)
+    )
 
     merged = merged[keep_mask]
 

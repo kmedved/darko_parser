@@ -241,7 +241,6 @@ def test_build_player_box_includes_dnp_players_when_meta_provided():
         exposures_df,
         player_meta=None,
         game_meta=None,
-        restrict_to_pbg=False,
         player_game_meta=player_game_meta,
     )
 
