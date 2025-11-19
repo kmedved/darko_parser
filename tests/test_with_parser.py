@@ -6,19 +6,17 @@ import pytest
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-pytest.importorskip("nba_parser")
 pytest.importorskip("pandas")
 
 import pandas as pd  # noqa: E402
 
 from nba_scraper import io_sources, lineup_builder  # noqa: E402
+from nba_scraper.stats import PbP  # noqa: E402
 
 FIXTURES = Path(__file__).parent / "test_files"
 
 
-def test_cdn_frame_works_with_nba_parser():
-    from nba_parser import PbP
-
+def test_cdn_frame_works_with_internal_parser():
     pbp = FIXTURES / "cdn_playbyplay_0022400001.json"
     box = FIXTURES / "cdn_boxscore_0022400001.json"
 
@@ -43,13 +41,12 @@ def test_cdn_frame_works_with_nba_parser():
     required |= {"eventnum", "scoremargin"}
     assert required.issubset(df.columns)
 
-    pbp = PbP(df)
-    pbg = pbp.playerbygamestats()
-    tbg = pbp.teambygamestats()
+    pbp_obj = PbP(df)
+    pbg = pbp_obj.player_box_glossary()
 
     assert not pbg.empty
-    assert not tbg.empty
-    assert tbg["toc_string"].str.match(r"^\d+:\d{2}$").all()
+    assert "PTS" in pbg.columns
+    assert "Minutes" in pbg.columns
 
 
 def test_jumpball_recovered_player_exposed_in_canonical_frame():
@@ -61,7 +58,6 @@ def test_jumpball_recovered_player_exposed_in_canonical_frame():
     - nba_parser.PbP must be able to sit on top of that canonical frame
       without issue.
     """
-    from nba_parser import PbP
 
     pbp = FIXTURES / "cdn_playbyplay_0022400001.json"
     box = FIXTURES / "cdn_boxscore_0022400001.json"
