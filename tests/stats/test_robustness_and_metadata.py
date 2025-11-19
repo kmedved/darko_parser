@@ -5,24 +5,6 @@ from nba_scraper.stats import PbP
 from nba_scraper.stats.box_glossary import annotate_events
 
 
-@pytest.fixture(scope="module")
-def pbp_v2_game():
-    """Provides a parsed PbP object for a V2 game."""
-    pbp_df = pd.read_csv("test/20700233.csv")
-    for col in [
-        "game_id",
-        "team_id",
-        "home_team_id",
-        "away_team_id",
-        *(f"home_player_{i}_id" for i in range(1, 6)),
-        *(f"away_player_{i}_id" for i in range(1, 6)),
-    ]:
-        if col in pbp_df.columns:
-            pbp_df[col] = pd.to_numeric(pbp_df[col], errors="coerce").fillna(0).astype(int)
-    pbp_df["season"] = 2008
-    return PbP(pbp_df)
-
-
 def test_pbp_enforces_single_game():
     """Validates Change 1: PbP class raises ValueError for multi-game DFs."""
     multi_game_df = pd.DataFrame({

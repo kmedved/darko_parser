@@ -9,28 +9,10 @@ from nba_scraper.stats.box_glossary import (
 )
 
 
-@pytest.fixture(scope="module")
-def pbp_v2_game_instance():
-    """Provides a parsed PbP object for a V2 game."""
-    pbp_df = pd.read_csv("test/20700233.csv")
-    for col in [
-        "game_id",
-        "team_id",
-        "home_team_id",
-        "away_team_id",
-        *(f"home_player_{i}_id" for i in range(1, 6)),
-        *(f"away_player_{i}_id" for i in range(1, 6)),
-    ]:
-        if col in pbp_df.columns:
-            pbp_df[col] = pd.to_numeric(pbp_df[col], errors="coerce").fillna(0).astype(int)
-    pbp_df["season"] = 2008
-    return PbP(pbp_df)
-
-
-def test_string_ids_are_normalized():
+def test_string_ids_are_normalized(v2_pbp_df):
     """Ensure PbP and downstream box glossary coerce string IDs to ints."""
 
-    pbp_df = pd.read_csv("test/20700233.csv")
+    pbp_df = v2_pbp_df.copy()
     id_cols = [
         "game_id",
         "team_id",
@@ -57,13 +39,13 @@ def test_string_ids_are_normalized():
     assert pd.api.types.is_integer_dtype(box["player_id"])
 
 
-def test_decoupling_from_pbg_stats(pbp_v2_game_instance):
+def test_decoupling_from_pbg_stats(pbp_v2_game):
     """
     Validates Change 1:
     Ensures box score stats are correct after removing the pbg_stats override.
     Also checks that players with minutes but no stats are now included.
     """
-    box = pbp_v2_game_instance.player_box_glossary()
+    box = pbp_v2_game.player_box_glossary()
     
     # Check a known player's stats (Carmelo Anthony)
     melo = box[box["player_id"] == 2546]
@@ -131,7 +113,7 @@ def test_assist_attribution_fix():
     assert assister_stats["AST"].iloc[0] == 1
 
 
-def test_metadata_passthrough(pbp_v2_game_instance):
+def test_metadata_passthrough(pbp_v2_game):
     """
     Validates Change 5:
     Ensures that pre-existing metadata columns like 'Starts' are preserved
@@ -144,7 +126,7 @@ def test_metadata_passthrough(pbp_v2_game_instance):
         "Starts": [1] # Override default
     })
     
-    box = pbp_v2_game_instance.player_box_glossary(player_meta=player_meta)
+    box = pbp_v2_game.player_box_glossary(player_meta=player_meta)
     
     diawara_row = box[box["player_id"] == 200784]
     
@@ -153,21 +135,16 @@ def test_metadata_passthrough(pbp_v2_game_instance):
     assert diawara_row["Starts"].iloc[0] == 1
 
 
-def test_player_box_glossary_cdn_game():
+def test_player_box_glossary_cdn_game(cdn_0021900151_df):
     """
     Smoke + invariants test on a CDN-era game to ensure the new pipeline
     works for modern data as well.
     """
-    pbp_df = pd.read_csv("test/0021900151_cdn.csv")
-    # Ensure season column exists; adjust to correct season if needed.
-    if "season" not in pbp_df.columns:
-        pbp_df["season"] = 2020
-
-    pbp = PbP(pbp_df)
+    pbp = PbP(cdn_0021900151_df)
     box = pbp.player_box_glossary()
 
     # Minutes sanity: each team should be ~game_minutes * 5
-    total_minutes = pbp_df["seconds_elapsed"].max() / 60.0
+    total_minutes = cdn_0021900151_df["seconds_elapsed"].max() / 60.0
     team_minutes = box.groupby("team_id")["Minutes"].sum()
     for minutes in team_minutes:
         assert abs(minutes - total_minutes * 5.0) < 1.0
