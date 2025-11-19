@@ -924,7 +924,7 @@ class PbP:
         self._check_on_court_points_consistency(box_df)
         self._check_on_court_minutes_consistency(box_df)
 
-        return box_df
+        return append_team_totals(box_df)
 
     def player_box_glossary_with_totals(
         self,
@@ -941,7 +941,7 @@ class PbP:
             game_meta=game_meta,
             player_game_meta=player_game_meta,
         )
-        return append_team_totals(box)
+        return box
 
     def _check_on_court_points_consistency(self, box: pd.DataFrame, tol: float = 1e-6) -> None:
         """

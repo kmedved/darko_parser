@@ -1575,8 +1575,8 @@ def append_team_totals(box_df: pd.DataFrame) -> pd.DataFrame:
     NOTE: This is a simple aggregator:
       - Sums counting stats and minutes across players.
       - Sums POSS_OFF / POSS_DEF and recomputes key rate stats from those sums.
-      - Sets identifier fields (NbaDotComID, PlayerID, etc.) to 0 and labels
-        Team/FullName/Player_Team as 'TOTAL'.
+      - Sets identifier fields (NbaDotComID, PlayerID, etc.) to the team_id and
+        labels Team/FullName/Player_Team as 'TOTAL'.
 
     You may want to tweak which columns are summed vs averaged depending on your
     use case.
@@ -1632,10 +1632,10 @@ def append_team_totals(box_df: pd.DataFrame) -> pd.DataFrame:
 
     team_totals = team_totals.merge(first_meta, on=id_cols, how="left")
 
-    team_totals["NbaDotComID"] = 0
-    team_totals["PlayerID"] = 0
-    team_totals["PlayerSeasonID"] = 0
-    team_totals["player_id"] = 0
+    team_totals["NbaDotComID"] = team_totals["team_id"]
+    team_totals["PlayerID"] = team_totals["team_id"]
+    team_totals["PlayerSeasonID"] = team_totals["team_id"]
+    team_totals["player_id"] = team_totals["team_id"]
     team_totals["FullName"] = "TOTAL"
     team_totals["Player_Team"] = "TOTAL"
     team_totals["G"] = 1  # team played the game
