@@ -642,10 +642,16 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
                     _increment_count(counts[key], f"{zone}_FGM_AST")
 
                 # Passer-level AST counts
-                # FIX: Prefer player2_team_id for the assister to handle edge cases
-                passer_team = row.get("player2_team_id")
-                if not _valid_player_id(passer_team):
+                # Prefer the normalized team_id / shooter team to avoid trusting
+                # malformed player2_team_id values from legacy feeds.
+                passer_team = row.get("team_id")
+                if passer_team is None or pd.isna(passer_team) or passer_team == 0:
                     passer_team = row.get("player1_team_id")
+                if (
+                    (passer_team is None or pd.isna(passer_team) or passer_team == 0)
+                    and row.get("player2_team_id") == shooter_team
+                ):
+                    passer_team = row.get("player2_team_id")
 
                 ast_key = (
                     game_id,

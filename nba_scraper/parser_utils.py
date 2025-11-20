@@ -130,6 +130,9 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
         ft_n_val = _safe_team(row.get("ft_n"))
         ft_m_val = _safe_team(row.get("ft_m"))
         is_d_reb = _safe_team(row.get("is_d_rebound"))
+        team_reb = _safe_team(row.get("team_rebound"))
+        subfamily_lower = str(row.get("subfamily") or "").lower()
+        is_technical_ft = "technical" in subfamily_lower
 
         # 1) Heuristic "hint" based on the event itself.
         hint = 0
@@ -143,7 +146,7 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
             hint = _opponent(team_id)
 
         # Defensive rebound -> rebounder's team.
-        elif family == "rebound" and is_d_reb == 1:
+        elif family == "rebound" and (is_d_reb == 1 or team_reb == 1):
             hint = team_id
 
         # Last made FT in a trip -> opponent, unless the raw feed already
@@ -154,6 +157,7 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
             and ft_m_val != 0
             and ft_n_val == ft_m_val
             and shot_made == 1
+            and not is_technical_ft
         ):
             raw_val = row.get("possession_after")
             if pd.isna(raw_val) or raw_val in ("", 0):
