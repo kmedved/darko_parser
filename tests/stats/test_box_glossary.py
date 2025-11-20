@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 # --- CHANGED: Point to the new internal stats module ---
 from nba_scraper.stats import box_glossary
@@ -255,3 +256,68 @@ def test_build_player_box_includes_dnp_players_when_meta_provided():
     dnp_row = team_rows[team_rows["player_id"] == 103].iloc[0]
     assert dnp_row["Minutes"] == 0
     assert dnp_row["DNP"] == 1
+
+
+def test_pace_matches_glossary_example():
+    """
+    Pace should follow the glossary example: ((POSS_OFF + POSS_DEF) / Minutes) * 24.
+    Using 48.01675 minutes and 172 total possessions yields a pace of ~85.97.
+    """
+
+    pbp_df = pd.DataFrame(
+        {
+            "game_id": [1],
+            "home_team_id": [1],
+            "away_team_id": [2],
+            "home_team_abbrev": ["HOM"],
+            "away_team_abbrev": ["AWY"],
+        }
+    )
+
+    counts_df = pd.DataFrame(
+        [
+            {
+                "game_id": 1,
+                "team_id": 1,
+                "player_id": 101,
+                "FGA": 0,
+                "FGM": 0,
+                "FTA": 0,
+                "FTM": 0,
+                "PTS": 0,
+            }
+        ]
+    )
+
+    exposures_df = pd.DataFrame(
+        [
+            {
+                "game_id": 1,
+                "team_id": 1,
+                "player_id": 101,
+                "Minutes": 48.016750029079915,
+                "POSS_OFF": 86,
+                "POSS_DEF": 86,
+                "OnCourt_Team_Points": 0,
+                "OnCourt_Opp_Points": 0,
+                "OnCourt_Team_FGM": 0,
+                "OnCourt_For_OREB_Total": 0,
+                "OnCourt_For_DREB_Total": 0,
+                "OnCourt_Opp_2p_Att": 0,
+            }
+        ]
+    )
+
+    box = box_glossary.build_player_box(
+        pbp_df,
+        counts_df,
+        exposures_df,
+        player_meta=None,
+        game_meta=None,
+        player_game_meta=None,
+    )
+
+    pace = box.loc[box["player_id"] == 101, "Pace"].iloc[0]
+    expected_pace = ((86 + 86) / 48.016750029079915) * 24.0
+
+    assert pace == pytest.approx(expected_pace)
