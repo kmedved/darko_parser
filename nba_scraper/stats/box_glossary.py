@@ -638,6 +638,10 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
         if row.get("family") == "free_throw" and is_valid_player:
             _increment_count(counts[key], "FTA")
 
+            subfam = str(row.get("subfamily_de", "")).lower()
+            if "technical" in subfam:
+                _increment_count(counts[key], "technical_free_throw_trips")
+
             # Mirror legacy logic: prefer shot_made when available, otherwise
             # fall back to points_made > 0.
             shot_made = row.get("shot_made")
@@ -750,6 +754,11 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
 
         if row.get("is_fg_make") and row.get("is_and_one") and _valid_player_id(player_id):
             _increment_count(counts[key], "AndOnes")
+
+            if bool(row.get("is_three")):
+                _increment_count(counts[key], "x3pt_and_1_free_throw_trips")
+            else:
+                _increment_count(counts[key], "x2pt_and_1_free_throw_trips")
 
     records: List[Dict[str, Any]] = []
     for (game_id, team_id, player_id), vals in counts.items():
@@ -1291,6 +1300,9 @@ def build_player_box(
         "CHRG",
         "Goaltends",
         "AndOnes",
+        "technical_free_throw_trips",
+        "x2pt_and_1_free_throw_trips",
+        "x3pt_and_1_free_throw_trips",
         "TOV_Live",
         "TOV_Dead",
         "DRB_FT",
@@ -1323,6 +1335,9 @@ def build_player_box(
         "FTA",
         "ThreePM",
         "ThreePA",
+        "technical_free_throw_trips",
+        "x2pt_and_1_free_throw_trips",
+        "x3pt_and_1_free_throw_trips",
         "DREB",
         "PF_DRAWN",
         "CHRG",
@@ -1352,7 +1367,28 @@ def build_player_box(
 
     new_cols["PPG"] = pd.to_numeric(merged.get("PTS", 0), errors="coerce").fillna(0).astype(float)
 
-    new_cols["TSAttempts"] = merged["FGA"] + 0.44 * merged["FTA"]
+    fg3a = pd.to_numeric(merged.get("ThreePA", 0), errors="coerce").fillna(0)
+    fg2a = pd.to_numeric(merged.get("FGA", 0), errors="coerce").fillna(0) - fg3a
+    tech_ft_trips = pd.to_numeric(
+        merged.get("technical_free_throw_trips", 0), errors="coerce"
+    ).fillna(0)
+    and1_2pt_trips = pd.to_numeric(
+        merged.get("x2pt_and_1_free_throw_trips", 0), errors="coerce"
+    ).fillna(0)
+    and1_3pt_trips = pd.to_numeric(
+        merged.get("x3pt_and_1_free_throw_trips", 0), errors="coerce"
+    ).fillna(0)
+    fta_adj = (
+        pd.to_numeric(merged.get("FTA", 0), errors="coerce").fillna(0)
+        - tech_ft_trips
+        - and1_2pt_trips
+        - and1_3pt_trips
+    )
+    fta_adj = np.maximum(fta_adj, 0)
+
+    new_cols["fg2a"] = fg2a
+    new_cols["fg3a"] = fg3a
+    new_cols["TSAttempts"] = fg2a + fg3a + fta_adj / 2.0
     new_cols["TSpct"] = np.where(
         new_cols["TSAttempts"] > 0,
         merged["PTS"] / (2.0 * new_cols["TSAttempts"]),
@@ -1360,7 +1396,7 @@ def build_player_box(
     )
     new_cols["TSPoss"] = new_cols["TSAttempts"]
     new_cols["TS"] = new_cols["TSpct"]
-    new_cols["PossessionsUsed"] = merged["FGA"] + 0.44 * merged["FTA"] + merged.get("TOV", 0)
+    new_cols["PossessionsUsed"] = new_cols["TSAttempts"] + merged.get("TOV", 0)
     new_cols["USG"] = np.where(
         merged["POSS_OFF"] > 0,
         new_cols["PossessionsUsed"] / merged["POSS_OFF"],
@@ -1818,17 +1854,35 @@ def append_team_totals(box_df: pd.DataFrame) -> pd.DataFrame:
     team_totals["Starts"] = 0  # not meaningful at team level
 
     # Recompute key rate stats for totals so they're not 5x sums.
-    team_totals["TSAttempts"] = team_totals["FGA"] + 0.44 * team_totals["FTA"]
+    team_fg3a = pd.to_numeric(team_totals.get("ThreePA", 0), errors="coerce").fillna(0)
+    team_fg2a = pd.to_numeric(team_totals.get("FGA", 0), errors="coerce").fillna(0) - team_fg3a
+    team_tech_ft_trips = pd.to_numeric(
+        team_totals.get("technical_free_throw_trips", 0), errors="coerce"
+    ).fillna(0)
+    team_and1_2pt = pd.to_numeric(
+        team_totals.get("x2pt_and_1_free_throw_trips", 0), errors="coerce"
+    ).fillna(0)
+    team_and1_3pt = pd.to_numeric(
+        team_totals.get("x3pt_and_1_free_throw_trips", 0), errors="coerce"
+    ).fillna(0)
+
+    team_fta_adj = (
+        pd.to_numeric(team_totals.get("FTA", 0), errors="coerce").fillna(0)
+        - team_tech_ft_trips
+        - team_and1_2pt
+        - team_and1_3pt
+    )
+    team_fta_adj = np.maximum(team_fta_adj, 0)
+
+    team_totals["fg2a"] = team_fg2a
+    team_totals["fg3a"] = team_fg3a
+    team_totals["TSAttempts"] = team_fg2a + team_fg3a + team_fta_adj / 2.0
     team_totals["TSpct"] = np.where(
         team_totals["TSAttempts"] > 0,
         team_totals["PTS"] / (2.0 * team_totals["TSAttempts"]),
         0.0,
     )
-    team_totals["PossessionsUsed"] = (
-        team_totals["FGA"]
-        + 0.44 * team_totals["FTA"]
-        + team_totals.get("TOV", 0)
-    )
+    team_totals["PossessionsUsed"] = team_totals["TSAttempts"] + team_totals.get("TOV", 0)
     team_totals["USG"] = np.where(
         team_totals["POSS_OFF"] > 0,
         team_totals["PossessionsUsed"] / team_totals["POSS_OFF"],
