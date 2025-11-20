@@ -4,6 +4,45 @@ import pandas as pd
 # --- CHANGED: Point to the new internal stats module ---
 from nba_scraper.stats import box_glossary
 
+
+def _mini_true_shooting_pbp():
+    base = {
+        "game_id": 1,
+        "home_team_id": 1,
+        "away_team_id": 2,
+        "home_team_abbrev": "HOM",
+        "away_team_abbrev": "AWY",
+        "event_team": "HOM",
+        "player1_id": 10,
+        "player1_team_id": 1,
+    }
+
+    return pd.DataFrame(
+        [
+            {
+                **base,
+                "event_type_de": "shot",
+                "subfamily_de": "jumper",
+                "qualifiers": "and1",
+                "points_made": 2,
+                "is_three": False,
+                "shot_made": 1,
+            },
+            {
+                **base,
+                "event_type_de": "free_throw",
+                "subfamily_de": "1 of 1",
+                "points_made": 1,
+            },
+            {
+                **base,
+                "event_type_de": "free_throw",
+                "subfamily_de": "Technical",
+                "points_made": 1,
+            },
+        ]
+    )
+
 def test_vectorized_shot_zone_area_only():
     """
     _vectorized_shot_zone should not crash when shot_distance is missing,
@@ -45,6 +84,58 @@ def test_vectorized_is_and_one_handles_various_qualifier_types():
 
     # First two rows have an and-one signal, rest do not.
     assert result.tolist() == [True, True, False, False, False]
+
+
+def test_accumulate_player_counts_tracks_glossary_free_throw_trips():
+    pbp = box_glossary.annotate_events(_mini_true_shooting_pbp())
+
+    counts = box_glossary.accumulate_player_counts(pbp)
+
+    player_counts = counts[counts["player_id"] == 10].iloc[0]
+
+    assert player_counts["technical_free_throw_trips"] == 1
+    assert player_counts["x2pt_and_1_free_throw_trips"] == 1
+    assert player_counts.get("x3pt_and_1_free_throw_trips", 0) == 0
+    assert player_counts["FTA"] == 2
+
+
+def test_build_player_box_uses_glossary_true_shooting_inputs():
+    pbp = box_glossary.annotate_events(_mini_true_shooting_pbp())
+    counts = box_glossary.accumulate_player_counts(pbp)
+
+    exposures = pd.DataFrame(
+        [
+            {
+                "game_id": 1,
+                "team_id": 1,
+                "player_id": 10,
+                "Minutes": 10.0,
+                "POSS_OFF": 10,
+                "POSS_DEF": 10,
+                "OnCourt_For_OREB_Total": 0,
+                "OnCourt_For_DREB_Total": 0,
+                "OnCourt_Opp_2p_Att": 0,
+                "OnCourt_Team_FGM": 0,
+                "OnCourt_Team_FGA": 0,
+                "OnCourt_Team_Points": 0,
+                "OnCourt_Opp_Points": 0,
+                "OnCourt_Team_FT_Att": 0,
+                "OnCourt_Team_FT_Made": 0,
+                "OnCourt_Team_3p_Att": 0,
+                "OnCourt_Team_3p_Made": 0,
+            }
+        ]
+    )
+
+    box = box_glossary.build_player_box(pbp, counts, exposures)
+
+    player_row = box[box["player_id"] == 10].iloc[0]
+
+    assert np.isclose(player_row["TSAttempts"], 1.0)
+    assert np.isclose(player_row["TSPoss"], player_row["TSAttempts"])
+    assert np.isclose(player_row["PossessionsUsed"], player_row["TSAttempts"] + player_row["TOV"])
+    assert np.isclose(player_row["TSpct"], player_row["PTS"] / (2 * player_row["TSAttempts"]))
+    assert np.isclose(player_row["USG"], player_row["PossessionsUsed"] / player_row["POSS_OFF"])
 
 
 def test_annotate_events_goaltend_via_qualifiers():
