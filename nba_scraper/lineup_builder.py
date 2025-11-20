@@ -223,11 +223,7 @@ def attach_lineups(
             group = group.copy()
             if group.empty:
                 return group
-            if "period" in group.columns:
-                period_one = group.index[group["period"] == 1]
-                first_idx = period_one[0] if len(period_one) else group.index[0]
-            else:
-                first_idx = group.index[0]
+            first_idx = group.index[0]
             for i, pid in enumerate(home_seed[:5], start=1):
                 group.loc[first_idx, f"home_player_{i}_id"] = int(pid)
             for i, pid in enumerate(away_seed[:5], start=1):
@@ -255,8 +251,10 @@ def attach_lineups(
     # Maintain simple FIFO queues of pending outs for each team, keeping the
     # event time to allow loose matching when "in" rows arrive slightly before
     # or after their partner.
-    pending_out_home: List[tuple[Optional[int], int]] = []
-    pending_out_away: List[tuple[Optional[int], int]] = []
+    pending_out_home: List[tuple[Optional[int], Optional[int], int]] = []
+    pending_out_away: List[tuple[Optional[int], Optional[int], int]] = []
+    pending_in_home: List[tuple[Optional[int], Optional[int], int]] = []
+    pending_in_away: List[tuple[Optional[int], Optional[int], int]] = []
     pending_out_max_lag = 20
 
     def _resolve_team_from_row(row: pd.Series) -> Optional[int]:
@@ -266,27 +264,52 @@ def attach_lineups(
                 return value
         return None
 
+    def _trim_pending(
+        queue: List[tuple[Optional[int], Optional[int], int]],
+        period_val: Optional[int],
+        secs_val: Optional[int],
+    ) -> bool:
+        if period_val is None and secs_val is None:
+            return False
+        before = len(queue)
+        queue[:] = [
+            (p, s, pid)
+            for p, s, pid in queue
+            if period_val is None or p is None or p == period_val
+        ]
+        return before > len(queue)
+
+    def _match_pending(
+        queue: List[tuple[Optional[int], Optional[int], int]],
+        period_val: Optional[int],
+        secs_val: Optional[int],
+    ) -> Optional[int]:
+        match_idx: Optional[int] = None
+        for idx, (p, s, _) in enumerate(queue):
+            if period_val is not None and p is not None and p != period_val:
+                continue
+            if s is None or secs_val is None or abs(s - secs_val) <= 2:
+                match_idx = idx
+                break
+        if match_idx is None:
+            for idx, (p, _, _) in enumerate(queue):
+                if period_val is None or p is None or p == period_val:
+                    match_idx = idx
+                    break
+        return match_idx
+
     for _, row in df.iterrows():
         secs_val = _safe_int(row.get("seconds_elapsed"))
+        period_val = _safe_int(row.get("period"))
 
         trimmed_home = False
         trimmed_away = False
-        if secs_val is not None:
-            before_home = len(pending_out_home)
-            pending_out_home[:] = [
-                (s, pid)
-                for s, pid in pending_out_home
-                if s is None or abs(secs_val - s) <= pending_out_max_lag
-            ]
-            trimmed_home = before_home > len(pending_out_home)
+        if secs_val is not None or period_val is not None:
+            trimmed_home = _trim_pending(pending_out_home, period_val, secs_val)
+            trimmed_home = _trim_pending(pending_in_home, period_val, secs_val) or trimmed_home
 
-            before_away = len(pending_out_away)
-            pending_out_away[:] = [
-                (s, pid)
-                for s, pid in pending_out_away
-                if s is None or abs(secs_val - s) <= pending_out_max_lag
-            ]
-            trimmed_away = before_away > len(pending_out_away)
+            trimmed_away = _trim_pending(pending_out_away, period_val, secs_val)
+            trimmed_away = _trim_pending(pending_in_away, period_val, secs_val) or trimmed_away
         player_id = _safe_int(row.get("player1_id"))
         event_team_id = _resolve_team_from_row(row) or _safe_int(row.get("player1_team_id"))
         if event_team_id and home_id and event_team_id == home_id:
@@ -320,16 +343,19 @@ def attach_lineups(
             if substitution_team and home_id and substitution_team == home_id:
                 pending_out = pending_out_home
                 pending_out_trimmed = trimmed_home
+                pending_in = pending_in_home
                 target = home_lineup
                 candidates = home_candidates
             elif substitution_team and away_id and substitution_team == away_id:
                 pending_out = pending_out_away
                 pending_out_trimmed = trimmed_away
+                pending_in = pending_in_away
                 target = away_lineup
                 candidates = away_candidates
             else:
                 pending_out = None
                 pending_out_trimmed = False
+                pending_in = None
                 target = None
                 candidates = None
 
@@ -339,33 +365,23 @@ def attach_lineups(
             if subfamily in {"out"}:
                 # CDN: "substitution" + subType "out" – only outgoing player present.
                 if pending_out is not None and raw_player:
-                    pending_out.append((secs_val, raw_player))
+                    pending_out.append((period_val, secs_val, raw_player))
+                    if pending_in:
+                        match_idx = _match_pending(pending_in, period_val, secs_val)
+                        if match_idx is not None:
+                            _, _, sub_in = pending_in.pop(match_idx)
+                            sub_out = raw_player
+                            pending_out.pop()
             elif subfamily in {"in"}:
                 # CDN: "substitution" + subType "in" – only incoming player present.
                 sub_in = raw_player
                 if pending_out is not None and pending_out:
-                    if secs_val is not None:
-                        pending_out[:] = [
-                            (out_secs, pid)
-                            for out_secs, pid in pending_out
-                            if out_secs is None or abs(out_secs - secs_val) <= pending_out_max_lag
-                        ]
-
-                    if pending_out:
-                        # Prefer an "out" that occurred within a small temporal window
-                        # of this "in" to tolerate ordering noise in the feed. If none
-                        # match, fall back to the oldest pending out.
-                        match_idx: Optional[int] = None
-                        for idx, (out_secs, _) in enumerate(pending_out):
-                            if out_secs is None or secs_val is None:
-                                match_idx = idx
-                                break
-                            if abs(out_secs - secs_val) <= 2:
-                                match_idx = idx
-                                break
-                        if match_idx is None:
-                            match_idx = 0
-                        _, sub_out = pending_out.pop(match_idx)
+                    match_idx = _match_pending(pending_out, period_val, secs_val)
+                    if match_idx is not None:
+                        _, _, sub_out = pending_out.pop(match_idx)
+                if sub_out is None and pending_in is not None and sub_in is not None:
+                    pending_in.append((period_val, secs_val, sub_in))
+                    sub_in = None
                 elif pending_out_trimmed:
                     sub_in = None
             else:
