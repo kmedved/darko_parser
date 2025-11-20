@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from importlib.resources import files
 from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -50,6 +51,24 @@ ZONE_BINS: List[Tuple[float, float, str]] = [
     (17.0, 23.0, "18_23"),
     (23.0, 100.0, "18_23"),
 ]
+
+
+def load_glossary_schema() -> pd.DataFrame:
+    """
+    Load the canonical player-box glossary schema from glossary_schema.csv.
+
+    Returns
+    -------
+    DataFrame
+        Expected columns include:
+          - Column: column name in player_box_glossary output
+          - Type: broad dtype category (e.g. 'int', 'float', 'string', 'bool')
+          - Example: example value (string for documentation)
+          - Definition / Notes: human-readable description
+    """
+    csv_path = files(__package__).joinpath("glossary_schema.csv")
+    # CSV is maintained in-repo; default UTF-8 is expected, but tolerate legacy bytes.
+    return pd.read_csv(csv_path, encoding="utf-8", encoding_errors="replace")
 
 
 def _validate_id_dtypes(df: pd.DataFrame, context: str = ""):
@@ -461,10 +480,8 @@ def annotate_events(df: pd.DataFrame) -> pd.DataFrame:
     df["is_goaltend"] = goaltend_flag
 
     # --- Shot zones ---
-    shot_mask = df["is_fg_attempt"]
     if "shot_distance" in df.columns or "area" in df.columns:
         zones = _vectorized_shot_zone(df)
-        zones = zones.where(shot_mask, None)
         df["shot_zone"] = zones
     else:
         df["shot_zone"] = None
@@ -1212,6 +1229,26 @@ def build_player_box(
 
     merged = merged[keep_mask]
 
+    # Game-level date: PbP enforces a single-game DataFrame, so
+    # take the first non-null game_date and broadcast it.
+    merged["Date"] = ""
+    if "game_date" in df.columns:
+        parsed_dates = pd.to_datetime(df["game_date"], errors="coerce")
+        first_valid = parsed_dates.dropna().iloc[0] if not parsed_dates.dropna().empty else None
+        if first_valid is not None:
+            merged["Date"] = first_valid.strftime("%Y-%m-%d")
+
+    source_value = None
+    for col in ("Source", "source"):
+        if col in df.columns:
+            non_null = df[col].dropna()
+            if not non_null.empty:
+                source_value = str(non_null.iloc[0])
+                break
+    if source_value is None:
+        source_value = ""
+    merged["Source"] = source_value
+
     merged["NbaDotComID"] = pd.to_numeric(merged["player_id"], errors="coerce").astype(
         "Int64"
     )
@@ -1248,11 +1285,15 @@ def build_player_box(
         "BLK_Opp",
         "STL",
         "PF_DRAWN",
+        "PF_Loose",
+        "TECH",
+        "FLAGRANT",
         "CHRG",
         "Goaltends",
         "AndOnes",
         "TOV_Live",
         "TOV_Dead",
+        "DRB_FT",
         "FGM_AST",
         "ThreePM_AST",
     ]
@@ -1262,12 +1303,54 @@ def build_player_box(
         else:
             merged[col] = merged[col].fillna(0)
 
+    int_like_cols = [
+        "PF_Loose",
+        "TECH",
+        "DRB_FT",
+        "FLAGRANT",
+        "PTS",
+        "OREB",
+        "AST",
+        "PF",
+        "TOV",
+        "STL",
+        "BLK",
+        "BLK_Team",
+        "BLK_Opp",
+        "FGM",
+        "FGA",
+        "FTM",
+        "FTA",
+        "ThreePM",
+        "ThreePA",
+        "DREB",
+        "PF_DRAWN",
+        "CHRG",
+        "Goaltends",
+        "AndOnes",
+        "TOV_Live",
+        "TOV_Dead",
+        "FGM_AST",
+        "ThreePM_AST",
+        "TM_BLK_OnCourt",
+    ]
+    for col in int_like_cols:
+        if col in merged.columns:
+            merged[col] = pd.to_numeric(merged[col], errors="coerce").fillna(0).astype(int)
+
+    poss_cols = ["POSS_OFF", "POSS_DEF", "POSS"]
+    for col in poss_cols:
+        if col in merged.columns:
+            merged[col] = pd.to_numeric(merged[col], errors="coerce").fillna(0).astype(int)
+
     for col in ["ThreePA_UNAST", "ThreePM_UNAST", "FGA_UNAST", "FGM_UNAST"]:
         if col not in merged.columns:
             merged[col] = 0
 
     # Build simple derived columns in a batch to reduce fragmentation
     new_cols = {}
+
+    new_cols["PPG"] = pd.to_numeric(merged.get("PTS", 0), errors="coerce").fillna(0).astype(float)
 
     new_cols["TSAttempts"] = merged["FGA"] + 0.44 * merged["FTA"]
     new_cols["TSpct"] = np.where(
@@ -1295,6 +1378,26 @@ def build_player_box(
         merged.get("OREB", 0) / merged["OnCourt_For_OREB_Total"],
         0.0,
     )
+    new_cols["OREBPct_FGA"] = np.where(
+        merged.get("OnCourt_Team_FGA", 0) > 0,
+        merged.get("OREB", 0) / merged.get("OnCourt_Team_FGA", 0),
+        0.0,
+    )
+    new_cols["OREB_FGA_100p"] = np.where(
+        merged["POSS_OFF"] > 0,
+        merged.get("OREB", 0) / merged["POSS_OFF"] * 100.0,
+        0.0,
+    )
+    new_cols["OREBPct_FT"] = np.where(
+        merged.get("OnCourt_Team_FT_Att", 0) > 0,
+        merged.get("OREB", 0) / merged.get("OnCourt_Team_FT_Att", 0),
+        0.0,
+    )
+    new_cols["OREB_FT_100p"] = np.where(
+        merged["POSS_OFF"] > 0,
+        merged.get("OREB", 0) / merged["POSS_OFF"] * 100.0,
+        0.0,
+    )
     new_cols["DRBpct"] = np.where(
         merged["OnCourt_For_DREB_Total"] > 0,
         merged.get("DREB", 0) / merged["OnCourt_For_DREB_Total"],
@@ -1310,6 +1413,40 @@ def build_player_box(
     # Alias rebound opportunity totals to glossary column names
     merged["OnCourt_For_OREB_FGA"] = merged.get("OnCourt_For_OREB_Total", 0)
     merged["OnCourt_For_DREB_FGA"] = merged.get("OnCourt_For_DREB_Total", 0)
+
+    merged["DRB"] = (
+        pd.to_numeric(merged.get("DREB", 0), errors="coerce").fillna(0).astype(int)
+    )
+    merged["DRB_FT"] = (
+        pd.to_numeric(merged.get("DRB_FT", 0), errors="coerce").fillna(0).astype(int)
+    )
+    merged["DREB_FGA"] = (
+        pd.to_numeric(merged.get("DREB", merged["DRB"]), errors="coerce").fillna(0)
+        - merged["DRB_FT"]
+    ).clip(lower=0)
+    merged["DREB_FGA"] = merged["DREB_FGA"].astype(int)
+
+    merged["DRBPct"] = np.where(
+        merged.get("OnCourt_For_DREB_Total", 0) > 0,
+        merged["DRB"] / merged.get("OnCourt_For_DREB_Total", 0),
+        0.0,
+    )
+    merged["DRBPct_FGA"] = np.where(
+        merged.get("OnCourt_For_DREB_FGA", 0) > 0,
+        merged["DRB"] / merged.get("OnCourt_For_DREB_FGA", 0),
+        0.0,
+    )
+    merged["DRBPct_FT"] = np.where(
+        merged.get("OnCourt_Opp_FT_Att", 0) > 0,
+        merged["DRB"] / merged.get("OnCourt_Opp_FT_Att", 0),
+        0.0,
+    )
+    merged["DRB_FGA_100p"] = np.where(
+        merged["POSS_DEF"] > 0, merged["DRB"] / merged["POSS_DEF"] * 100.0, 0.0
+    )
+    merged["DRB_FT_100p"] = np.where(
+        merged["POSS_DEF"] > 0, merged["DRB_FT"] / merged["POSS_DEF"] * 100.0, 0.0
+    )
 
     teammate_fgm = np.maximum(
         merged["OnCourt_Team_FGM"] - merged.get("FGM", 0),
@@ -1475,6 +1612,8 @@ def build_player_box(
         if col not in merged.columns:
             merged[col] = np.nan
 
+    merged["Position"] = merged["Position"].fillna("").astype(str)
+
     merged["Player_Team"] = np.where(
         merged["FullName"].notna() & merged["NbaDotComID"].notna(),
         merged["FullName"].astype(str) + " " + merged["NbaDotComID"].astype(int).astype(str),
@@ -1556,9 +1695,6 @@ def build_player_box(
         merged[f"{label}_FGM_100p_UNAST"] = merged.get(f"{label}_FGM_UNAST_100p", 0)
         merged[f"{label}_FGA_100p_UNAST"] = merged.get(f"{label}_FGA_UNAST_100p", 0)
 
-    # --- Defensive rebound alias for glossary naming ---
-    merged["DRB"] = merged.get("DREB", 0)
-
     # --- Raw AST-by-zone aliases corresponding to AST_*ft_100p ---
     merged["AST_0_3ft"] = merged.get("AST_0_3", 0)
     merged["AST_4_9ft"] = merged.get("AST_4_9", 0)
@@ -1573,6 +1709,26 @@ def build_player_box(
         merged["OnCourt_For_OREB_FGA"] = merged.get("OnCourt_For_OREB_Total", 0)
     if "OnCourt_For_DREB_FGA" not in merged.columns:
         merged["OnCourt_For_DREB_FGA"] = merged.get("OnCourt_For_DREB_Total", 0)
+
+    try:
+        schema_df = load_glossary_schema()
+        int_columns = (
+            schema_df.loc[
+                schema_df["Type"].astype(str).str.strip().str.lower() == "int",
+                "Column",
+            ]
+            .dropna()
+            .astype(str)
+            .tolist()
+        )
+        for col in int_columns:
+            if col in merged.columns:
+                merged[col] = (
+                    pd.to_numeric(merged[col], errors="coerce").fillna(0).astype(int)
+                )
+    except Exception:
+        # If the schema cannot be loaded, keep existing dtypes and let callers handle it.
+        pass
 
     merged = merged.copy()
     _validate_id_dtypes(merged, context="build_player_box::output")

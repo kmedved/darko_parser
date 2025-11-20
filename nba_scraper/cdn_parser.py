@@ -526,10 +526,10 @@ def parse_actions_to_rows(
                 )
 
         if overrides:
-            if family not in {"2pt", "3pt"} and "eventmsgtype" in overrides:
+            if "eventmsgtype" in overrides and family not in {"2pt", "3pt"}:
                 row["eventmsgtype"] = int(overrides["eventmsgtype"])
-                if "eventmsgactiontype" in overrides:
-                    row["eventmsgactiontype"] = int(overrides["eventmsgactiontype"])
+            if "eventmsgactiontype" in overrides:
+                row["eventmsgactiontype"] = int(overrides["eventmsgactiontype"])
             if overrides.get("subfamily"):
                 row["subfamily"] = str(overrides["subfamily"])
             row["event_type_de"] = EVENT_TYPE_DE.get(row["eventmsgtype"], "")

@@ -223,6 +223,11 @@ and `NbaDotComID` are set equal to `team_id` to give the aggregate rows stable
 join keys; they do **not** represent personIds. Filter on `Player_Team !=
 "TOTAL"` when you only want player-level stats.
 
+Column definitions, expected dtypes, and glossary descriptions for this output
+are maintained in `nba_scraper/stats/glossary_schema.csv`. Treat this CSV as
+read-only and load it via `nba_scraper.stats.load_glossary_schema()` when you
+need the authoritative schema inside code or tests.
+
 # Maintainer & contact
 
 `nba_scraper` was founded by Matthew Barlowe, and the project will always be grateful for the groundwork he laid. Day-to-day maintenance now happens under Kostya Medvedovsky (@kmedved on Twitter, creator of DARKO).
