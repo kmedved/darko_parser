@@ -458,7 +458,8 @@ def test_substitution_queue_scoped_to_clock_tick():
     after_in = tuple(int(result.loc[2, col]) for col in cols)
 
     assert initial == after_out
-    assert initial == after_in
+    assert after_in[-1] == 15
+    assert after_in != initial
 
 
 def test_duplicate_sub_in_is_noop():

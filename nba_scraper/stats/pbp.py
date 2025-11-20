@@ -596,9 +596,19 @@ class PbP:
 
             mask = fam.isin(valid_end_families)
             if not mask.any():
-                # No obvious possession-ending event in this stretch:
-                # treat as non-possession for RAPM/on‑court scoring.
-                normalized_segments.append(seg.iloc[0:0])
+                # No obvious possession-ending event in this stretch. If there
+                # were live-ball actions, keep the segment to preserve dribble
+                # outs/end-of-period holds as empty-score possessions. Otherwise
+                # drop pure administrative stretches.
+                event_type_series = seg.get("event_type_de")
+                if event_type_series is None:
+                    live_mask = pd.Series([True] * len(seg), index=seg.index)
+                else:
+                    live_mask = ~event_type_series.isin(["period", "timeout"])
+                if live_mask.any():
+                    normalized_segments.append(seg.copy())
+                else:
+                    normalized_segments.append(seg.iloc[0:0])
                 continue
 
             last_idx = mask[mask].index[-1]

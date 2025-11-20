@@ -148,11 +148,6 @@ def _seed_lineup(starters: List[int]) -> List[Optional[int]]:
         if pid_int is not None:
             valid_starters.append(pid_int)
 
-    if len(valid_starters) < 5:
-        # Avoid half-seeding a lineup; fall back to unknown slots so runtime
-        # events determine on-court players.
-        return lineup
-
     for idx, pid in enumerate(valid_starters[:5]):
         lineup[idx] = pid
     return lineup
@@ -198,16 +193,9 @@ def _apply_substitution(
             if pid is None:
                 lineup[idx] = sub_in
                 return
-        # No available slot and no matching sub_out – we still need to reflect
-        # that someone left the floor. Evict the last non-empty slot to keep a
-        # five-player lineup instead of silently dropping the substitution.
-        for idx in range(len(lineup) - 1, -1, -1):
-            if lineup[idx] is not None:
-                lineup[idx] = sub_in
-                return
-        # As an extreme fallback (all Nones), just place the sub_in in the
-        # first slot.
-        lineup[0] = sub_in
+        # No available slot and no matching sub_out – replace the last slot to
+        # ensure the incoming player reaches the floor.
+        lineup[-1] = sub_in
 
 
 def attach_lineups(
@@ -226,13 +214,10 @@ def attach_lineups(
     if starters is None and box_json is not None:
         starters = _extract_starters_from_box(box_json)
 
-    if (
-        starters
-        and len(starters.get("home", [])) == 5
-        and len(starters.get("away", [])) == 5
-    ):
-        home_seed = [int(pid) for pid in starters["home"]]
-        away_seed = [int(pid) for pid in starters["away"]]
+    home_seed = [int(pid) for pid in starters.get("home", [])] if starters else []
+    away_seed = [int(pid) for pid in starters.get("away", [])] if starters else []
+
+    if starters and (home_seed or away_seed):
 
         def _seed_group(group: pd.DataFrame) -> pd.DataFrame:
             group = group.copy()
@@ -243,9 +228,9 @@ def attach_lineups(
                 first_idx = period_one[0] if len(period_one) else group.index[0]
             else:
                 first_idx = group.index[0]
-            for i, pid in enumerate(home_seed, start=1):
+            for i, pid in enumerate(home_seed[:5], start=1):
                 group.loc[first_idx, f"home_player_{i}_id"] = int(pid)
-            for i, pid in enumerate(away_seed, start=1):
+            for i, pid in enumerate(away_seed[:5], start=1):
                 group.loc[first_idx, f"away_player_{i}_id"] = int(pid)
             return group
 
@@ -257,8 +242,8 @@ def attach_lineups(
     home_starters = starters.get("home", []) if starters else []
     away_starters = starters.get("away", []) if starters else []
 
-    home_lineup = _seed_lineup(home_starters) if len(home_starters) == 5 else _init_lineup()
-    away_lineup = _seed_lineup(away_starters) if len(away_starters) == 5 else _init_lineup()
+    home_lineup = _seed_lineup(home_starters) if home_starters else _init_lineup()
+    away_lineup = _seed_lineup(away_starters) if away_starters else _init_lineup()
 
     home_candidates: List[int] = [pid for pid in home_lineup if pid]
     away_candidates: List[int] = [pid for pid in away_lineup if pid]

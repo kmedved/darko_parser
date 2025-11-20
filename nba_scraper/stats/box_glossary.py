@@ -564,6 +564,7 @@ def _valid_player_id(pid: Any) -> bool:
 
 def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
+    canonical_map = _build_canonical_team_map(df)
     counts: Dict[tuple, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
 
     last_fg_context: Dict[str, Any] = {
@@ -643,9 +644,12 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
                     _increment_count(counts[key], f"{zone}_FGM_AST")
 
                 # Passer-level AST counts
-                # Prefer the normalized team_id / shooter team to avoid trusting
-                # malformed player2_team_id values from legacy feeds.
-                passer_team = row.get("team_id")
+                # Prefer a canonical team from lineups; otherwise fall back to
+                # the normalized team_id / shooter team without trusting raw
+                # player2_team_id blindly.
+                passer_team = canonical_map.get(_coerce_id_scalar(assist_id))
+                if not passer_team:
+                    passer_team = row.get("team_id")
                 if passer_team is None or pd.isna(passer_team) or passer_team == 0:
                     passer_team = row.get("player1_team_id")
                 if (
@@ -1538,10 +1542,11 @@ def build_player_box(
     new_cols["TSPoss"] = new_cols["TSAttempts"]
     new_cols["TS"] = new_cols["TSpct"]
     new_cols["PossessionsUsed"] = merged["FGA"] + 0.44 * merged["FTA"] + merged.get("TOV", 0)
+    impossible_usg = (merged["POSS_OFF"] == 0) & (new_cols["PossessionsUsed"] > 0)
     new_cols["USG"] = np.where(
         merged["POSS_OFF"] > 0,
         new_cols["PossessionsUsed"] / merged["POSS_OFF"],
-        0.0,
+        np.where(impossible_usg, np.nan, 0.0),
     )
 
     new_cols["FGPct"] = np.where(merged["FGA"] > 0, merged["FGM"] / merged["FGA"], 0.0)
