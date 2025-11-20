@@ -30,10 +30,12 @@ This section documents every tracked file in the repository so downstream LLM ag
 * `boxscore_validation.py` – Computes team totals from canonical PbP, compares against official box scores, and provides logging helpers plus field constant tuples.
 * `helper_functions.py` – See above; located in core package to support scraping flows.
 * `schema.py` – Canonical column ordering, event type labels, and simple numeric helpers (`int_or_zero`, `scoremargin_str`, `points_made_from_family`).
-* `nba_scraper/stats/glossary_schema.csv` – Canonical schema for the per-player box returned by `PbP.player_box_glossary()` / `player_box_glossary_with_totals()`. Columns: `Column`, `Type`, `Example`, `Definition / Notes`.
+* `nba_scraper/stats/glossary_schema.csv` – Canonical schema for the per-player box returned by `PbP.player_box_glossary()` / `player_box_glossary_with_totals()`. Columns: `Column`, `Type`, `Example`, `Definition / Notes`, `Player_or_OnCourt`, `Numerator`, `Denominator`.
   - **This file is maintained by humans and must be treated as read-only by agents.**
   - Downstream agents must treat it as the single source of truth for what each column means and must **not** edit, rewrite, or “fix” it to make tests pass.
   - If you believe the schema is inconsistent with the code, surface the discrepancy in comments or tests instead of changing the CSV.
+  - `Player_or_OnCourt` clarifies whether the metric tracks the player’s individual actions or summarizes team performance with the player on the floor.
+  - `Numerator` and `Denominator` capture the intended calculation inputs (or 1 for counting stats) to aid reproducible metric derivations.
 
 ### Mapping utilities (`nba_scraper/mapping/`)
 * `__init__.py` – Re-exports descriptor normalization and event code helpers.
@@ -77,6 +79,6 @@ box_score = parser.player_box_glossary() # Returns player stats + team totals
 rapm = parser.rapm_possessions()         # Returns possession-level data
 ```
 
-`PbP.player_box_glossary()` returns columns defined in `glossary_schema.csv`. When describing metrics (TSAttempts, USG, ASTpct, etc.), consult this CSV instead of guessing.
+`PbP.player_box_glossary()` returns columns defined in `glossary_schema.csv`. When describing metrics (TSAttempts, USG, ASTpct, etc.), consult this CSV—including the `Player_or_OnCourt`, `Numerator`, and `Denominator` columns—to avoid guessing about definitions or how to derive each stat.
 Do not invent new columns or semantics, and do not modify the CSV. If something is missing or unclear, flag it for human review or highlight the mismatch in code/tests
 instead of changing the schema file.
