@@ -85,6 +85,7 @@ class _SidecarCollector:
     def __init__(self) -> None:
         self._by_shot: Dict[Tuple[int, Optional[int]], Dict[str, Any]] = {}
         self._pending_rows: Dict[Tuple[int, Optional[int]], List[Dict[str, Any]]] = {}
+        self._applied_keys: set[Tuple[int, Optional[int]]] = set()
 
     def register(self, action: Dict[str, Any]) -> None:
         shot_key = action.get("shotActionNumber")
@@ -101,7 +102,7 @@ class _SidecarCollector:
             entry["steal_name"] = action.get("playerName")
         if key in self._pending_rows:
             for row in self._pending_rows.pop(key):
-                self._apply_entry(entry, row)
+                self._apply_entry(key, entry, row)
 
     def apply(self, action: Dict[str, Any], row: Dict[str, Any]) -> None:
         shot_key = action.get("shotActionNumber")
@@ -113,9 +114,10 @@ class _SidecarCollector:
         if not data:
             self._pending_rows.setdefault(key, []).append(row)
             return
-        self._apply_entry(data, row)
+        self._apply_entry(key, data, row)
 
-    def _apply_entry(self, data: Dict[str, Any], row: Dict[str, Any]) -> None:
+    def _apply_entry(self, key: Tuple[int, Optional[int]], data: Dict[str, Any], row: Dict[str, Any]) -> None:
+        self._applied_keys.add(key)
         if data.get("block_id"):
             row["block_id"] = data["block_id"]
             if data.get("block_name"):
@@ -143,6 +145,42 @@ class _SidecarCollector:
                         row.get("away_team_id"),
                     )
                 row["is_steal"] = 1
+
+    def finalize_orphan_steals(
+        self, rows_df: pd.DataFrame, person_to_team: Dict[int, int]
+    ) -> None:
+        """Attach steal sidecars that never found a matching turnover row."""
+
+        if rows_df.empty:
+            return
+
+        for key, data in self._by_shot.items():
+            if key in self._applied_keys:
+                continue
+            steal_pid = int_or_zero(data.get("steal_id"))
+            if not steal_pid:
+                continue
+
+            period_val, _ = key
+            period_mask = rows_df.get("period") == period_val
+            turnover_mask = rows_df.get("family") == "turnover"
+            candidates = rows_df[period_mask & turnover_mask]
+            if candidates.empty:
+                continue
+
+            steal_team = int_or_zero(person_to_team.get(steal_pid))
+            if steal_team:
+                candidates = candidates[candidates.get("team_id") != steal_team]
+                if candidates.empty:
+                    candidates = rows_df[period_mask & turnover_mask]
+
+            target_idx = candidates.index[-1]
+            rows_df.at[target_idx, "is_steal"] = 1
+            rows_df.at[target_idx, "steal_id"] = steal_pid
+            if int_or_zero(rows_df.at[target_idx, "player2_id"]) == 0:
+                rows_df.at[target_idx, "player2_id"] = steal_pid
+            if steal_team and int_or_zero(rows_df.at[target_idx, "player2_team_id"]) == 0:
+                rows_df.at[target_idx, "player2_team_id"] = steal_team
 
 
 def _qualifiers_list(action: Dict[str, Any]) -> List[str]:
@@ -672,6 +710,7 @@ def parse_actions_to_rows(
         rows.append(row)
 
     df = pd.DataFrame(rows, columns=CANONICAL_COLUMNS)
+    sidecars.finalize_orphan_steals(df, person_to_team)
     df = finalize_dataframe(
         df,
         sort_keys=["period", "order_number", "action_number"],
