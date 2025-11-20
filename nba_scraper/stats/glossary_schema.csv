@@ -1,5 +1,5 @@
-Column,Type,Example,Definition,Team_or_Player,Numerator,Denominator
-Date,string,2/1/97,Game date,N/A,game date as provided in schedule (string),1
+Column,Type,Example,Definition,Player_or_OnCourt,Numerator,Denominator
+Date,string,2/1/1997,Game date,N/A,game date as provided in schedule (string),1
 NbaDotComID,int,894,NBA.com `personId` for the player.,N/A,NBA.com personId for this player from source data,1
 Team_SingleGame,int,1610612747,Numeric NBA franchise ID for this team in this specific game (matches NBA.com `teamId`).,N/A,NBA franchise id (teamId) for this player's team in this game,1
 Game_SingleGame,int,29600072,"Game identifier in your single game export (e.g., NBA.com gameId or a mapped equivalent). Does not include leading 00s.",N/A,numeric game identifier for this single-game row,1
@@ -62,7 +62,7 @@ BLK_Team_100p,float,0,`BLK_Team` per 100 **opponent possessions** while this pla
 BLK_Opp,int,0,"Blocks where the **opponent ultimately retains or regains possession** (e.g., deflection out of bounds to opponent, or opponent recovers loose ball).",Player,count of blocks where opponent retains or regains possession,1
 BLK_Team,int,0,Blocks where the **player’s own team gains/retains possession** after the block (team recovers).,Player,count of blocks where player's team gains or retains possession,1
 BLK,int,0,Total blocks credited to the player. Identity: `BLK = BLK_Team + BLK_Opp`.,Player,BLK_Team + BLK_Opp,1
-TM_BLK_OnCourt,int,0,Total blocks by the player’s team while this player is on the court (regardless of who recovers).,Team,total team blocks while player is on court (including BLK and teammate blocks),1
+TM_BLK_OnCourt,int,0,Total blocks by the player’s team while this player is on the court (regardless of who recovers).,OnCourt,total team blocks while player is on court (including BLK and teammate blocks),1
 Goaltends_100p,float,0,Goaltending violations committed per 100 team defensive possessions while on court.,Player,Goaltends * 100,POSS_DEF
 Goaltends,int,0,Goaltending violations credited to the player.,Player,count of goaltending violations by player,1
 STLpct,float,0,Steal percentage – estimate of share of opponent possessions ending in a steal by this player while on court.,Player,STL,POSS_DEF
@@ -166,20 +166,20 @@ AST_18_23ft,int,0,Assists leading to 18–23 ft makes by teammates (long 2s / shor
 AST_18_23ft_100p,float,0,Assists 18-23 feet from the rim per 100 team offensive possessions.,Player,AST_18_23ft * 100,POSS_OFF
 AST_3P,int,1,Assists leading to 3pt makes by teammates.,Player,count of assists leading to teammates' 3PM,1
 AST_3P_100p,float,2.63,Three point assists per 100 team offensive possessions.,Player,AST_3P * 100,POSS_OFF
-OnCourt_Opp_FT_Made,int,7,Opponent free throws made while this player is on the court.,Team,opponent free throws made while player is on court,1
-OnCourt_Opp_FT_Att,int,8,Opponent free throws attempted while this player is on the court.,Team,opponent free throws attempted while player is on court,1
-OnCourt_Opp_3p_Made,int,4,Opponent 3pt field goals made while this player is on court.,Team,opponent 3pt field goals made while player is on court,1
-OnCourt_Opp_3p_Att,int,12,Opponent 3pt field goals attempted while this player is on court.,Team,opponent 3pt field goals attempted while player is on court,1
-OnCourt_Opp_FGA,int,34,Opponent field goal attempts while this player is on court.,Team,opponent field goal attempts while player is on court,1
-OnCourt_Opp_Points,int,39,Opponent points scored while this player is on court.,Team,opponent points scored while player is on court,1
-OnCourt_For_OREB_FGA,int,16,Team Offensive Rebounds off field goals when player was on the court,Team,team offensive rebounds off own missed FGA while player is on court,1
-OnCourt_For_DREB_FGA,int,17,Team defensive rebounds off field goals when player was on the court,Team,team defensive rebounds off opponent missed FGA while player is on court,1
-OnCourt_Team_FT_Made,int,6,Team free throws made while this player is on court.,Team,team free throws made while player is on court,1
-OnCourt_Team_FT_Att,int,8,Team free throws attempted while this player is on court.,Team,team free throws attempted while player is on court,1
-OnCourt_Team_3p_Made,int,2,Team 3pt field goals made while this player is on court.,Team,team 3pt field goals made while player is on court,1
-OnCourt_Team_3p_Att,int,8,Team 3pt field goals attempted while this player is on court.,Team,team 3pt field goals attempted while player is on court,1
-OnCourt_Team_Points,int,36,Team points scored while this player is on court.,Team,team points scored while player is on court,1
-Plus_Minus,int,-3,Oncourt scoring margin: `OnCourt_Team_Points – OnCourt_Opp_Points` while the player is on the floor.,Team,OnCourt_Team_Points - OnCourt_Opp_Points,1
+OnCourt_Opp_FT_Made,int,7,Opponent free throws made while this player is on the court.,OnCourt,opponent free throws made while player is on court,1
+OnCourt_Opp_FT_Att,int,8,Opponent free throws attempted while this player is on the court.,OnCourt,opponent free throws attempted while player is on court,1
+OnCourt_Opp_3p_Made,int,4,Opponent 3pt field goals made while this player is on court.,OnCourt,opponent 3pt field goals made while player is on court,1
+OnCourt_Opp_3p_Att,int,12,Opponent 3pt field goals attempted while this player is on court.,OnCourt,opponent 3pt field goals attempted while player is on court,1
+OnCourt_Opp_FGA,int,34,Opponent field goal attempts while this player is on court.,OnCourt,opponent field goal attempts while player is on court,1
+OnCourt_Opp_Points,int,39,Opponent points scored while this player is on court.,OnCourt,opponent points scored while player is on court,1
+OnCourt_For_OREB_FGA,int,16,Team Offensive Rebounds off field goals when player was on the court,OnCourt,team offensive rebounds off own missed FGA while player is on court,1
+OnCourt_For_DREB_FGA,int,17,Team defensive rebounds off field goals when player was on the court,OnCourt,team defensive rebounds off opponent missed FGA while player is on court,1
+OnCourt_Team_FT_Made,int,6,Team free throws made while this player is on court.,OnCourt,team free throws made while player is on court,1
+OnCourt_Team_FT_Att,int,8,Team free throws attempted while this player is on court.,OnCourt,team free throws attempted while player is on court,1
+OnCourt_Team_3p_Made,int,2,Team 3pt field goals made while this player is on court.,OnCourt,team 3pt field goals made while player is on court,1
+OnCourt_Team_3p_Att,int,8,Team 3pt field goals attempted while this player is on court.,OnCourt,team 3pt field goals attempted while player is on court,1
+OnCourt_Team_Points,int,36,Team points scored while this player is on court.,OnCourt,team points scored while player is on court,1
+Plus_Minus,int,-3,Oncourt scoring margin: `OnCourt_Team_Points – OnCourt_Opp_Points` while the player is on the floor.,OnCourt,OnCourt_Team_Points - OnCourt_Opp_Points,1
 season,int,1997,Season year for this row (matches `Year` in your sample).,N/A,season end year for this row (same as Year),1
 h_tm_id,int,1610612747,Home team ID (NBA franchise id).,N/A,home team NBA franchise id,1
 v_tm_id,int,1610612737,Visitor team ID.,N/A,visitor team NBA franchise id,1
