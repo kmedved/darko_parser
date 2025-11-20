@@ -1,189 +1,187 @@
-Column,Type,Example,Definition
-Date,string,45223,Game date
-NbaDotComID,int,894,NBA.com `personId` for the player.
-Team_SingleGame,int,1610612747,Numeric NBA franchise ID for this team in this specific game (matches NBA.com `teamId`).
-Game_SingleGame,int,29600072,"Game identifier in your single?game export (e.g., NBA.com gameId or a mapped equivalent). Does not include leading 00s."
-FullName,string,Ricky Pierce 894,Player’s full name as stored in the file
-Player_Team,string,Ricky Pierce 894,Label used for the player+team combo in this export
-Year,int,1997,"Season year associated with this game/row in your dataset (e.g., 1997 for the 1996?97 season)."
-Position,string,G,"Player’s listed position (e.g., `G`, `F`, `C`, `F-C`, etc.)."
-Source,string,playbyplayv2,Whether the source is playbyplayv2 or CDN
-G,int,1,"Games played in the sample context (for a single?game file this is typically 1 for active players, 0 for pure DNP/inactive rows)."
-Inactive,int,0,"Flag or count for games where the player was inactive (1 in this game if listed inactive, else 0)."
-DNP,int,0,Did Not Play in this game (any reason).
-Starts,int,0,1 if the player started the game; 0 otherwise.
-POSS,int,76,Always equal to POSS_OFF + POSS_DEF
-POSS_OFF,int,38,Team offensive possessions when the player is on the court
-POSS_DEF,int,38,Team defensive possessions when the player is on the court
-MPG,float,21.22,Minutes played in this game (or minutes per game in an aggregate table). In the sample single?game file this is the in?game minutes.
-Minutes,float,21.22,Raw minutes played in the game (may match `MPG` in single?game exports).
-Pace,float,85.97,Pace while player was on court scaled to 48 minutes. (2880 / (Minutes*60 / POSS)) / 2
-TSAttempts,float,4.88,True?shooting attempts. Calculation is fg2a + fg3a + (fta - technical_free_throw_trips - x2pt_and_1_free_throw_trips - x3pt_and_1_free_throw_trips)/2
-TSpct,float,0.7172,True Shooting %: `PTS / (2 * TSAttempts)`.
-PossessionsUsed,float,5,"Estimate of possessions **finished** by the player (using FGA, FTA, TOV, etc.)"
-USG,float,0.1316,"Usage rate – share of team offensive possessions while on floor that end with this player’s FGA, FTA, or TOV."
-PTS,int,7,Total points scored by the player in this game.
-PTS_100p,float,30.19,Points per 100 **team offensive possessions** while this player is on the floor: `PTS / POSS_OFF * 100`.
-PPG,float,0,Points scored this game
-ORBpct,float,0.1316,Offensive rebound percentage – estimate of share of available offensive rebounds the player grabs while on court.
-OREB_100p,float,18.42,"Offensive rebounds per 100 **team offensive possessions** while this player is on court (denominator is your team?offense possession estimator, not necessarily `POSS_OFF`)."
-OREBPct_FGA,float,0,Offensive rebound percentage on field goal attempts
-OREB_FGA_100p,float,0,Offensive rebounds per 100 **team offensive possessions** while this player is on court
-OREBPct_FT,float,0,Offensive rebound percentage on free throw attempts
-OREB_FT_100p,float,0,Offensive rebounds on free throw attempts per 100 **team offensive possessions** while this player is on court
-OREB,int,7,Offensive rebounds credited to the player.
-OREB_FGA,float,7,Offensive rebounds credited to the player that came from a missed field goal
-OREB_FT,float,0,Offensive rebounds credited to the player that came from a missed free throw
-DRBPct,float,0,Defensive rebound percentage – share of available defensive rebounds the player collects while on court.
-DREB_100p,float,0,Defensive rebounds per 100 **team defensive possessions** while this player is on court: `DRB / POSS_DEF * 100`.
-DRBPct_FGA,float,0.25,Defensive rebound percentage on field goal attempts
-DRB_FGA_100p,float,9.090909091,Defensive rebounds per 100 **team offensive possessions** while this player is on court
-DRBPct_FT,float,0,Defensive rebound percentage on free throw attempts
-DRB_FT_100p,float,0,Defensive rebounds on free throw attempts per 100 **team defensive possessions** while this player is on court
-DRB,int,0,Defensive rebounds credited to the player.
-DREB_FGA,int,1,Defensive rebounds off field goal attempts
-DRB_FT,int,0,Defensive rebounds off free throw attempts
-ASTpct,float,0.25,Assist percentage – estimate of percentage of teammate field goals the player assisted while on court.
-AST_100p,float,7.89,Assists per 100 team possessions while the player is on court. (Exact poss base may be all poss or offensive poss depending on your upstream calc.)
-AST,int,3,Assists credited to the player.
-PF_100p,float,0,Personal fouls committed per 100 team possessions while on court.
-PF,int,0,Personal fouls committed.
-PF_DRAWN_100p,float,2.63,Personal fouls drawn per 100 team possessions while on court.
-PF_DRAWN,int,1,Personal fouls drawn (fouls committed by opponents on this player).
-PF_Loose_100p,float,0,Loose?ball fouls committed per 100 team possessions.
-PF_Loose,int,0,Loose?ball fouls committed by the player.
-CHRG_100p,float,0,Charges drawn per 100 team possessions while on court.
-CHRG,int,0,Charges drawn by the player (offensive fouls by opponents where this player is the primary defender).
-TECH_100p,float,0,Technical fouls committed per 100 team possessions.
-TECH,int,0,Technical fouls committed.
-FLAGRANT_100p,float,0,Flagrant fouls committed per 100 team possessions.
-FLAGRANT,int,0,Flagrant fouls committed.
-BLKPct,float,0,Block percentage – share of opponent 2?pt FGA blocked by the player while on court.
-BLK_Opp_100p,float,0,`BLK_Opp` per 100 **opponent possessions** while this player is on court: `BLK_Opp / POSS_DEF * 100`.
-BLK_Team_100p,float,0,`BLK_Team` per 100 **opponent possessions** while this player is on court: `BLK_Team / POSS_DEF * 100`.
-BLK_Opp,int,0,"Blocks where the **opponent ultimately retains or regains possession** (e.g., deflection out of bounds to opponent, or opponent recovers loose ball)."
-BLK_Team,int,0,Blocks where the **player’s own team gains/retains possession** after the block (team recovers).
-BLK,int,0,Total blocks credited to the player. Identity: `BLK = BLK_Team + BLK_Opp`.
-TM_BLK_OnCourt,int,0,Total blocks by the player’s team while this player is on the court (regardless of who recovers).
-Goaltends_100p,float,0,Goaltending violations committed per 100 team possessions while on court.
-Goaltends,int,0,Goaltending violations credited to the player.
-STLpct,float,0,Steal percentage – estimate of share of opponent possessions ending in a steal by this player while on court.
-STL_100p,float,0,Steals per 100 opponent (or total) possessions while on court (matches your upstream steal?rate denominator).
-STL,int,0,Steals credited to the player.
-TOVpct,float,0,Turnover percentage – estimate of turnovers per possession used by the player.
-TOV_100p,float,0,Turnovers per 100 team offensive possessions while on court.
-TOV_Live_100p,float,0,"Live?ball turnovers per 100 team offensive possessions (steals, etc.)."
-TOV_Dead_100p,float,0,"Dead?ball turnovers per 100 team offensive possessions (violations, charges, etc.)."
-TOV,int,0,Total turnovers committed by the player.
-TOV_Live,int,0,Live?ball turnovers committed.
-TOV_Dead,int,0,Dead?ball turnovers committed.
-FTM_100p,float,2.63,Free throws made per 100 **team offensive possessions** while on court: `FTM / POSS_OFF * 100`.
-FTA_100p,float,2.63,Free throws attempted per 100 **team offensive possessions** while on court: `FTA / POSS_OFF * 100`.
-FTM,int,0,Free throws made
-FTA,int,0,Free throws attempted
-FT%,float,1,Free?throw percentage: `FTM / FTA` (1.0 means 100%).
-FTR_Att,float,0.5,Free?throw rate by attempts: `FTA / FGA`.
-FTR_Made,float,0.5,Free?throw rate by makes: `FTM / FGA`.
-AndOne_100p,float,0,And?1s (FGM + drawn shooting foul on same play) per 100 team offensive possessions.
-AndOnes,int,0,Count of And?1 plays.
-FGM,int,0,Field Goals Made
-FGA,int,0,Field Goals Attempted
-FGM_100p,float,5.26,Field goals made per 100 **team offensive possessions** while on court: `FGM / POSS_OFF * 100`.
-FGA_100p,float,5.26,Field goals attempted per 100 **team offensive possessions** while on court: `FGA / POSS_OFF * 100`.
-FGPct,float,0.5,Field?goal percentage: `FGM / FGA`.
-0_3ft_FGM,int,2,Field goals made from 0–3 ft (restricted area / at rim).
-0_3ft_FGA,int,4,Field goals attempted from 0–3 ft.
-0_3ft_FGM_100p,float,5.26,0–3 ft FGM per 100 team offensive possessions.
-0_3ft_FGA_100p,float,10.53,0–3 ft FGA per 100 team offensive possessions.
-0_3ft_FGPct,float,0.5,FG% on 0–3 ft shots: `0_3ft_FGM / 0_3ft_FGA`.
-4_9ft_FGM,int,0,Field goals made from 4–9 ft.
-4_9ft_FGA,int,2,Field goals attempted from 4–9 ft.
-4_9ft_FGM_100p,float,0,4–9 ft FGM per 100 team offensive possessions.
-4_9ft_FGA_100p,float,5.26,4–9 ft FGA per 100 team offensive possessions.
-4_9ft_FGPct,float,0,FG% on 4–9 ft shots.
-10_17ft_FGM,int,0,Field goals made from 10–17 ft.
-10_17ft_FGA,int,0,Field goals attempted from 10–17 ft.
-10_17ft_FGM_100p,float,0,10–17 ft FGM per 100 team offensive possessions.
-10_17ft_FGA_100p,float,0,10–17 ft FGA per 100 team offensive possessions.
-10_17ft_FGPct,float,0,FG% on 10–17 ft shots.
-18_23ft_FGM,int,1,Field goals made from 18–23 ft (long twos / short threes by distance).
-18_23ft_FGA,int,4,Field goals attempted from 18–23 ft.
-18_23ft_FGM_100p,float,2.63,18–23 ft FGM per 100 team offensive possessions.
-18_23ft_FGA_100p,float,10.53,18–23 ft FGA per 100 team offensive possessions.
-18_23ft_FGPct,float,0.25,FG% on 18–23 ft shots.
-3PM,int,0,Three Pointers Made
-3PA,int,0,Three Pointers Attempted
-3PM_100p,float,5.26,3?pt FGM per 100 **team offensive possessions** while on court: `3PM / POSS_OFF * 100`.
-3PA_100p,float,10.53,3?pt FGA per 100 **team offensive possessions** while on court: `3PA / POSS_OFF * 100`.
-3PPct,float,0.5,3?pt percentage: `3PM / 3PA`.
-FGM_UNAST,int,4,Field goals made that are unassisted.
-FGA_UNAST,int,14,Field goal attempts that are unassisted.
-FGM_UNAST_100p,float,5.26,Unassisted FGM per 100 **team offensive possessions** while on court.
-FGA_UNAST_100p,float,18.42,Unassisted FGA per 100 **team offensive possessions** while on court.
-FG_UNAST_Pct,float,0.286,**FG% on unassisted shots**: `FGM_UNAST / FGA_UNAST`.
-0_3ft_FGM_UNAST,int,2,Unassisted field goals made from 0–3 ft.
-0_3ft_FGA_UNAST,int,3,Unassisted field goal attempts from 0–3 ft.
-0_3ft_FGM_100p_UNAST,float,2.63,0–3 ft unassisted FGM per 100 team offensive possessions.
-0_3ft_FGA_100p_UNAST,float,3.95,0–3 ft unassisted FGA per 100 team offensive possessions.
-0_3ft_FG_UNAST_Pct,float,0.667,FG% on **unassisted** 0–3 ft attempts: `0_3ft_FGM_UNAST / 0_3ft_FGA_UNAST`.
-4_9ft_FGM_UNAST,int,1,Unassisted field goals made from 4–9 ft.
-4_9ft_FGA_UNAST,int,2,Unassisted field goal attempts from 4–9 ft.
-4_9ft_FGM_100p_UNAST,float,1.32,4–9 ft unassisted FGM per 100 team offensive possessions.
-4_9ft_FGA_UNAST_100p,float,2.63,4–9 ft unassisted FGA per 100 team offensive possessions.
-4_9ft_FG_UNAST_Pct,float,0.5,FG% on **unassisted** 4–9 ft attempts.
-10_17ft_FGM_UNAST,int,0,Unassisted field goals made from 10–17 ft.
-10_17ft_FGA_UNAST,int,1,Unassisted field goal attempts from 10–17 ft.
-10_17ft_FGM_UNAST_100p,float,0,10–17 ft unassisted FGM per 100 team offensive possessions.
-10_17ft_FGA_UNAST_100p,float,1.32,10–17 ft unassisted FGA per 100 team offensive possessions.
-10_17ft_FG_UNAST_Pct,float,0,FG% on **unassisted** 10–17 ft attempts.
-18_23ft_FGM_UNAST,int,1,Unassisted field goals made from 18–23 ft.
-18_23ft_FGA_UNAST,int,3,Unassisted field goal attempts from 18–23 ft.
-18_23ft_FGM_UNAST_100p,float,1.32,18–23 ft unassisted FGM per 100 team offensive possessions.
-18_23ft_FGA_UNAST_100p,float,3.95,18–23 ft unassisted FGA per 100 team offensive possessions.
-18_23ft_FG_UNAST_Pct,float,0.333,FG% on **unassisted** 18–23 ft attempts.
-3PM_UNAST,int,1,Unassisted 3?pt field goals made.
-3PA_UNAST,int,5,Unassisted 3?pt attempts.
-3PM_UNAST_100p,float,1.32,Unassisted 3PM per 100 team offensive possessions.
-3PA_UNAST_100p,float,6.58,Unassisted 3PA per 100 team offensive possessions.
-3P_UNAST_Pct,float,0.2,3?pt percentage **on unassisted 3s**: `3PM_UNAST / 3PA_UNAST`.
-FGM_AST,int,1,Assisted field goals made (`FGM - FGM_UNAST`).
-FGM_100p_AST,float,2.63,Assisted FGM per 100 team offensive possessions.
-0_3ft_FGM_AST,int,0,Assisted field goals made from 0–3 ft.
-0_3ft_FGM_100p_AST,float,0,0–3 ft assisted FGM per 100 team offensive possessions.
-4_9ft_FGM_AST,int,1,Assisted field goals made from 4–9 ft.
-4_9ft_FGM_100p_AST,float,2.63,4–9 ft assisted FGM per 100 team offensive possessions.
-10_17ft_FGM_AST,int,0,Assisted field goals made from 10–17 ft.
-10_17ft_FGM_100p_AST,float,0,10–17 ft assisted FGM per 100 team offensive possessions.
-18_23ft_FGM_AST,int,0,Assisted field goals made from 18–23 ft.
-18_23ft_FGM_100p_AST,float,0,18–23 ft assisted FGM per 100 team offensive possessions.
-3PM_AST,int,1,Assisted 3?pt field goals made.
-3PM_100p_AST,float,2.63,Assisted 3PM per 100 team offensive possessions.
-AST_0_3ft,int,0,Assists by this player leading to teammates’ 0–3 ft makes.
-AST_0_3ft_100p,float,0,Such assists per 100 team offensive possessions.
-AST_4_9ft,int,2,Assists leading to 4–9 ft makes by teammates.
-AST_4_9ft_100p,float,5.26,Such assists per 100 team offensive possessions.
-AST_10_17ft,int,0,Assists leading to 10–17 ft makes by teammates.
-AST_10_17ft_100p,float,0,Such assists per 100 team offensive possessions.
-AST_18_23ft,int,0,Assists leading to 18–23 ft makes by teammates (long 2s / short 3s).
-AST_18_23ft_100p,float,0,Such assists per 100 team offensive possessions.
-AST_3P,int,1,Assists leading to 3?pt makes by teammates.
-AST_3P_100p,float,2.63,Such assists per 100 team offensive possessions.
-OnCourt_Opp_FT_Made,int,7,Opponent free throws made while this player is on the court.
-OnCourt_Opp_FT_Att,int,8,Opponent free throws attempted while this player is on the court.
-OnCourt_Opp_3p_Made,int,4,Opponent 3?pt field goals made while this player is on court.
-OnCourt_Opp_3p_Att,int,12,Opponent 3?pt field goals attempted while this player is on court.
-OnCourt_Opp_FGA,int,34,Opponent field goal attempts while this player is on court.
-OnCourt_Opp_Points,int,39,Opponent points scored while this player is on court.
-OnCourt_For_OREB_FGA,int,16,Team Offensive Rebounds off field goals when player was on the court
-OnCourt_For_DREB_FGA,int,17,Team defensive rebounds off field goals when player was on the court
-OnCourt_Team_FT_Made,int,6,Team free throws made while this player is on court.
-OnCourt_Team_FT_Att,int,8,Team free throws attempted while this player is on court.
-OnCourt_Team_3p_Made,int,2,Team 3?pt field goals made while this player is on court.
-OnCourt_Team_3p_Att,int,8,Team 3?pt field goals attempted while this player is on court.
-OnCourt_Team_Points,int,36,Team points scored while this player is on court.
-Plus_Minus,int,-3,On?court scoring margin: `OnCourt_Team_Points – OnCourt_Opp_Points` while the player is on the floor.
-season,int,1997,Season year for this row (matches `Year` in your sample).
-h_tm_id,int,1610612747,Home team ID (NBA franchise id).
-v_tm_id,int,1610612737,Visitor team ID.
-home_fl,int,1,"1 if the row’s team is the home team, 0 otherwise."
-check_season,int,0,Internal check flag for season alignment / data QC (1/0).
+Column,Type,Example,Definition,Poss_Base,Team_or_Player
+Date,string,2/1/1997,Game date,,N/A
+NbaDotComID,int,894,NBA.com `personId` for the player.,,N/A
+Team_SingleGame,int,1610612747,Numeric NBA franchise ID for this team in this specific game (matches NBA.com `teamId`).,,N/A
+Game_SingleGame,int,29600072,"Game identifier in your single game export (e.g., NBA.com gameId or a mapped equivalent). Does not include leading 00s.",,N/A
+FullName,string,Ricky Pierce,Player’s full name as stored in the file,,N/A
+Player_Team,string,Ricky Pierce 894,Label used for the player+team combo in this export,,N/A
+Year,int,1997,"Season year associated with this game/row in your dataset (e.g., 1997 for the 1996-97 season).",,N/A
+Position,string,G,"Player’s listed position (e.g., `G`, `F`, `C`, `F-C`, etc.).",,N/A
+Source,string,playbyplayv2,Whether the source is playbyplayv2 or CDN,,N/A
+G,int,1,"Games played in the sample context (for a single game file this is typically 1 for active players, 0 for pure DNP/inactive rows).",,Player
+Inactive,int,0,"Flag or count for games where the player was inactive (1 in this game if listed inactive, else 0).",,Player
+DNP,int,0,"Did Not Play in this game (inactive, or coaches decision)",,Player
+Starts,int,0,1 if the player started the game; 0 otherwise.,,Player
+POSS,int,76,Always equal to POSS_OFF + POSS_DEF,,Player
+POSS_OFF,int,38,Team offensive possessions when the player is on the court,,Player
+POSS_DEF,int,38,Team defensive possessions when the player is on the court,,Player
+Minutes,float,21.22,Raw minutes played in the game (may match `MPG` in single-game exports).,,Player
+Pace,float,85.97,"“Pace while on the court, in team possessions per 48 minutes: Pace = 48 * (POSS) / (2 * Minutes)”",POSS,Player
+TSAttempts,float,4.88,True shooting attempts. Calculation is fg2a + fg3a + (fta - technical_free_throw_trips - x2pt_and_1_free_throw_trips - x3pt_and_1_free_throw_trips)/2,,Player
+TSpct,float,0.7172,True Shooting %: `PTS / (2 * TSAttempts)`.,,Player
+PossessionsUsed,float,5,"Possessions **finished** by the player (using FGA, FTA, TOV, etc.)",,Player
+USG,float,0.1316,"Usage rate – share of team offensive possessions while on floor that end with this player’s FGA, FTA, or TOV.",,Player
+PTS,int,7,Total points scored by the player in this game.,,Player
+PTS_100p,float,30.19,Points per 100 **team offensive possessions** while this player is on the floor: `PTS / POSS_OFF * 100`.,POSS,Player
+ORBpct,float,0.1316,Offensive rebound percentage – estimate of share of available offensive rebounds the player grabs while on court.,,Player
+OREB_100p,float,18.42,Offensive rebounds per 100 **team offensive possessions** while this player is on court,POSS_OFF,Player
+OREBPct_FGA,float,0,Offensive rebound percentage on field goal attempts,,Player
+OREB_FGA_100p,float,0,Offensive rebounds per 100 **team offensive possessions** while this player is on court,POSS_OFF,Player
+OREBPct_FT,float,0,Offensive rebound percentage on free throw attempts,,Player
+OREB_FT_100p,float,0,Offensive rebounds on free throw attempts per 100 **team offensive possessions** while this player is on court,POSS_OFF,Player
+OREB,int,7,Offensive rebounds credited to the player.,,Player
+OREB_FGA,float,7,Offensive rebounds credited to the player that came from a missed field goal,,Player
+OREB_FT,float,0,Offensive rebounds credited to the player that came from a missed free throw,,Player
+DRBPct,float,0,Defensive rebound percentage – share of available defensive rebounds the player collects while on court.,,Player
+DREB_100p,float,0,Defensive rebounds per 100 **team defensive possessions** while this player is on court: `DRB / POSS_DEF * 100`.,POSS_DEF,Player
+DRBPct_FGA,float,0.25,Defensive rebound percentage on field goal attempts,,Player
+DRB_FGA_100p,float,9.090909091,Defensive rebounds per 100 **team defensive possessions** while this player is on court,POSS_DEF,Player
+DRBPct_FT,float,0,Defensive rebound percentage on free throw attempts,,Player
+DRB_FT_100p,float,0,Defensive rebounds on free throw attempts per 100 **team defensive possessions** while this player is on court,POSS_DEF,Player
+DRB,int,0,Defensive rebounds credited to the player.,,Player
+DREB_FGA,int,1,Defensive rebounds off field goal attempts,,Player
+DRB_FT,int,0,Defensive rebounds off free throw attempts,,Player
+ASTpct,float,0.25,Assist percentage – estimate of percentage of teammate field goals the player assisted while on court.,,Player
+AST_100p,float,7.89,Assists per 100 team offensive possessions while the player is on court.,POSS_OFF,Player
+AST,int,3,Assists credited to the player.,,Player
+PF_100p,float,0,Personal fouls committed per 100 team possessions while on court.,POSS,Player
+PF,int,0,Personal fouls committed.,,Player
+PF_DRAWN_100p,float,2.63,Personal fouls drawn per 100 team possessions while on court.,POSS,Player
+PF_DRAWN,int,1,Personal fouls drawn (fouls committed by opponents on this player).,,Player
+PF_Loose_100p,float,0,Loose ball fouls committed per 100 team possessions.,POSS,Player
+PF_Loose,int,0,Loose ball fouls committed by the player.,,Player
+CHRG_100p,float,0,Charges drawn per 100 team defensive possessions while on court.,POSS_DEF,Player
+CHRG,int,0,Charges drawn by the player (offensive fouls by opponents where this player is the primary defender).,,Player
+TECH_100p,float,0,Technical fouls committed per 100 team possessions.,POSS,Player
+TECH,int,0,Technical fouls committed.,,Player
+FLAGRANT_100p,float,0,Flagrant fouls committed per 100 team possessions.,POSS,Player
+FLAGRANT,int,0,Flagrant fouls committed.,,Player
+BLKPct,float,0,Block percentage – share of opponent 2pt FGA blocked by the player while on court.,,Player
+BLK_Opp_100p,float,0,`BLK_Opp` per 100 **opponent possessions** while this player is on court: `BLK_Opp / POSS_DEF * 100`.,POSS_DEF,Player
+BLK_Team_100p,float,0,`BLK_Team` per 100 **opponent possessions** while this player is on court: `BLK_Team / POSS_DEF * 100`.,POSS_DEF,Player
+BLK_Opp,int,0,"Blocks where the **opponent ultimately retains or regains possession** (e.g., deflection out of bounds to opponent, or opponent recovers loose ball).",,Player
+BLK_Team,int,0,Blocks where the **player’s own team gains/retains possession** after the block (team recovers).,,Player
+BLK,int,0,Total blocks credited to the player. Identity: `BLK = BLK_Team + BLK_Opp`.,,Player
+TM_BLK_OnCourt,int,0,Total blocks by the player’s team while this player is on the court (regardless of who recovers).,,Team
+Goaltends_100p,float,0,Goaltending violations committed per 100 team defensive possessions while on court.,POSS_DEF,Player
+Goaltends,int,0,Goaltending violations credited to the player.,,Player
+STLpct,float,0,Steal percentage – estimate of share of opponent possessions ending in a steal by this player while on court.,,Player
+STL_100p,float,0,Steals per 100 opponent (or total) possessions while on court,POSS_DEF,Player
+STL,int,0,Steals credited to the player.,,Player
+TOVpct,float,0,Turnover percentage – estimate of turnovers per possession used by the player.,,Player
+TOV_100p,float,0,Turnovers per 100 team offensive possessions while on court.,POSS_OFF,Player
+TOV_Live_100p,float,0,"Live ball turnovers per 100 team offensive possessions (steals, etc.).",POSS_OFF,Player
+TOV_Dead_100p,float,0,"Dead ball turnovers per 100 team offensive possessions (violations, charges, etc.).",POSS_OFF,Player
+TOV,int,0,Total turnovers committed by the player.,,Player
+TOV_Live,int,0,Live ball turnovers committed.,,Player
+TOV_Dead,int,0,Dead ball turnovers committed.,,Player
+FTM_100p,float,2.63,Free throws made per 100 **team offensive possessions** while on court: `FTM / POSS_OFF * 100`.,POSS_OFF,Player
+FTA_100p,float,2.63,Free throws attempted per 100 **team offensive possessions** while on court: `FTA / POSS_OFF * 100`.,POSS_OFF,Player
+FTM,int,0,Free throws made,,Player
+FTA,int,0,Free throws attempted,,Player
+FT%,float,1,Free throw percentage: `FTM / FTA` (1.0 means 100%).,,Player
+FTR_Att,float,0.5,Free throw rate by attempts: `FTA / FGA`.,,Player
+FTR_Made,float,0.5,Free throw rate by makes: `FTM / FGA`.,,Player
+AndOne_100p,float,0,And 1s (FGM + drawn shooting foul on same play) per 100 team offensive possessions.,POSS_OFF,Player
+AndOnes,int,0,Count of And 1 plays.,,Player
+FGM,int,0,Field Goals Made,,Player
+FGA,int,0,Field Goals Attempted,,Player
+FGM_100p,float,5.26,Field goals made per 100 **team offensive possessions** while on court: `FGM / POSS_OFF * 100`.,POSS_OFF,Player
+FGA_100p,float,5.26,Field goals attempted per 100 **team offensive possessions** while on court: `FGA / POSS_OFF * 100`.,POSS_OFF,Player
+FGPct,float,0.5,Field goal percentage: `FGM / FGA`.,,Player
+0_3ft_FGM,int,2,Field goals made from 0–3 ft (restricted area / at rim).,,Player
+0_3ft_FGA,int,4,Field goals attempted from 0–3 ft.,,Player
+0_3ft_FGM_100p,float,5.26,0–3 ft FGM per 100 team offensive possessions.,POSS_OFF,Player
+0_3ft_FGA_100p,float,10.53,0–3 ft FGA per 100 team offensive possessions.,POSS_OFF,Player
+0_3ft_FGPct,float,0.5,FG% on 0–3 ft shots: `0_3ft_FGM / 0_3ft_FGA`.,,Player
+4_9ft_FGM,int,0,Field goals made from 4–9 ft.,,Player
+4_9ft_FGA,int,2,Field goals attempted from 4–9 ft.,,Player
+4_9ft_FGM_100p,float,0,4–9 ft FGM per 100 team offensive possessions.,POSS_OFF,Player
+4_9ft_FGA_100p,float,5.26,4–9 ft FGA per 100 team offensive possessions.,POSS_OFF,Player
+4_9ft_FGPct,float,0,FG% on 4–9 ft shots.,,Player
+10_17ft_FGM,int,0,Field goals made from 10–17 ft.,,Player
+10_17ft_FGA,int,0,Field goals attempted from 10–17 ft.,,Player
+10_17ft_FGM_100p,float,0,10–17 ft FGM per 100 team offensive possessions.,POSS_OFF,Player
+10_17ft_FGA_100p,float,0,10–17 ft FGA per 100 team offensive possessions.,POSS_OFF,Player
+10_17ft_FGPct,float,0,FG% on 10–17 ft shots.,,Player
+18_23ft_FGM,int,1,Field goals made from 18–23 ft (long twos / short threes by distance).,,Player
+18_23ft_FGA,int,4,Field goals attempted from 18–23 ft.,,Player
+18_23ft_FGM_100p,float,2.63,18–23 ft FGM per 100 team offensive possessions.,POSS_OFF,Player
+18_23ft_FGA_100p,float,10.53,18–23 ft FGA per 100 team offensive possessions.,POSS_OFF,Player
+18_23ft_FGPct,float,0.25,FG% on 18–23 ft shots.,,Player
+3PM,int,0,Three Pointers Made,,Player
+3PA,int,0,Three Pointers Attempted,,Player
+3PM_100p,float,5.26,3 pt FGM per 100 **team offensive possessions** while on court: `3PM / POSS_OFF * 100`.,POSS_OFF,Player
+3PA_100p,float,10.53,3 pt FGA per 100 **team offensive possessions** while on court: `3PA / POSS_OFF * 100`.,POSS_OFF,Player
+3PPct,float,0.5,3 pt percentage: `3PM / 3PA`.,,Player
+FGM_UNAST,int,4,Field goals made that are unassisted.,,Player
+FGA_UNAST,int,14,Field goal attempts that are unassisted.,,Player
+FGM_UNAST_100p,float,5.26,Unassisted FGM per 100 **team possessions** while on court.,POSS_OFF,Player
+FGA_UNAST_100p,float,18.42,Unassisted FGA per 100 **team possessions** while on court.,POSS_OFF,Player
+FG_UNAST_Pct,float,0.286,**FG% on unassisted shots**: `FGM_UNAST / FGA_UNAST`.,,Player
+0_3ft_FGM_UNAST,int,2,Unassisted field goals made from 0–3 ft.,,Player
+0_3ft_FGA_UNAST,int,3,Unassisted field goal attempts from 0–3 ft.,,Player
+0_3ft_FGM_100p_UNAST,float,2.63,0–3 ft unassisted FGM per 100 team offensive possessions.,POSS_OFF,Player
+0_3ft_FGA_100p_UNAST,float,3.95,0–3 ft unassisted FGA per 100 team offensive possessions.,POSS_OFF,Player
+0_3ft_FG_UNAST_Pct,float,0.667,FG% on **unassisted** 0–3 ft attempts: `0_3ft_FGM_UNAST / 0_3ft_FGA_UNAST`.,,Player
+4_9ft_FGM_UNAST,int,1,Unassisted field goals made from 4–9 ft.,,Player
+4_9ft_FGA_UNAST,int,2,Unassisted field goal attempts from 4–9 ft.,,Player
+4_9ft_FGM_100p_UNAST,float,1.32,4–9 ft unassisted FGM per 100 team offensive possessions.,POSS_OFF,Player
+4_9ft_FGA_UNAST_100p,float,2.63,4–9 ft unassisted FGA per 100 **team offensive possessions**,POSS_OFF,Player
+4_9ft_FG_UNAST_Pct,float,0.5,FG% on **unassisted** 4–9 ft attempts.,,Player
+10_17ft_FGM_UNAST,int,0,Unassisted field goals made from 10–17 ft.,,Player
+10_17ft_FGA_UNAST,int,1,Unassisted field goal attempts from 10–17 ft.,,Player
+10_17ft_FGM_UNAST_100p,float,0,10–17 ft unassisted FGM per 100 **team offensive possessions** ,POSS_OFF,Player
+10_17ft_FGA_UNAST_100p,float,1.32,10–17 ft unassisted FGA per 100 **team offensive possessions**,POSS_OFF,Player
+10_17ft_FG_UNAST_Pct,float,0,FG% on **unassisted** 10–17 ft attempts.,,Player
+18_23ft_FGM_UNAST,int,1,Unassisted field goals made from 18–23 ft.,,Player
+18_23ft_FGA_UNAST,int,3,Unassisted field goal attempts from 18–23 ft.,,Player
+18_23ft_FGM_UNAST_100p,float,1.32,18–23 ft unassisted FGM per 100 **team offensive possessions**,POSS_OFF,Player
+18_23ft_FGA_UNAST_100p,float,3.95,18–23 ft unassisted FGA per 100 **team offensive possessions**,POSS_OFF,Player
+18_23ft_FG_UNAST_Pct,float,0.333,FG% on **unassisted** 18–23 ft attempts.,,Player
+3PM_UNAST,int,1,Unassisted 3pt field goals made.,,Player
+3PA_UNAST,int,5,Unassisted 3pt attempts.,,Player
+3PM_UNAST_100p,float,1.32,Unassisted 3PM per 100 **team offensive possessions** while on court.,POSS_OFF,Player
+3PA_UNAST_100p,float,6.58,Unassisted 3PA per 100 **team offensive possessions** while on court.,POSS_OFF,Player
+3P_UNAST_Pct,float,0.2,3pt percentage **on unassisted 3s**: `3PM_UNAST / 3PA_UNAST`.,,Player
+FGM_AST,int,1,Assisted field goals made (`FGM - FGM_UNAST`).,,Player
+FGM_100p_AST,float,2.63,Assisted FGM per 100 team offensive possessions.,POSS_OFF,Player
+0_3ft_FGM_AST,int,0,Assisted field goals made from 0–3 ft.,,Player
+0_3ft_FGM_100p_AST,float,0,0–3 ft assisted FGM per 100 team offensive possessions.,POSS_OFF,Player
+4_9ft_FGM_AST,int,1,Assisted field goals made from 4–9 ft.,,Player
+4_9ft_FGM_100p_AST,float,2.63,4–9 ft assisted FGM per 100 team offensive possessions.,POSS_OFF,Player
+10_17ft_FGM_AST,int,0,Assisted field goals made from 10–17 ft.,,Player
+10_17ft_FGM_100p_AST,float,0,10–17 ft assisted FGM per 100 team offensive possessions.,POSS_OFF,Player
+18_23ft_FGM_AST,int,0,Assisted field goals made from 18–23 ft.,,Player
+18_23ft_FGM_100p_AST,float,0,18–23 ft assisted FGM per 100 team offensive possessions.,POSS_OFF,Player
+3PM_AST,int,1,Assisted 3pt field goals made.,,Player
+3PM_100p_AST,float,2.63,Assisted 3PM per 100 team offensive possessions.,POSS_OFF,Player
+AST_0_3ft,int,0,Assists by this player leading to teammates’ 0–3 ft makes.,,Player
+AST_0_3ft_100p,float,0,Assists 0-3 feet from the rim per 100 team offensive possessions.,POSS_OFF,Player
+AST_4_9ft,int,2,Assists leading to 4–9 ft makes by teammates.,,Player
+AST_4_9ft_100p,float,5.26,Assists 4-9 feet from the rim per 100 team offensive possessions.,POSS_OFF,Player
+AST_10_17ft,int,0,Assists leading to 10–17 ft makes by teammates.,,Player
+AST_10_17ft_100p,float,0,Assists 10-17 feet from the rim per 100 team offensive possessions.,POSS_OFF,Player
+AST_18_23ft,int,0,Assists leading to 18–23 ft makes by teammates (long 2s / short 3s).,,Player
+AST_18_23ft_100p,float,0,Assists 18-23 feet from the rim per 100 team offensive possessions.,POSS_OFF,Player
+AST_3P,int,1,Assists leading to 3pt makes by teammates.,,Player
+AST_3P_100p,float,2.63,Three point assists per 100 team offensive possessions.,POSS_OFF,Player
+OnCourt_Opp_FT_Made,int,7,Opponent free throws made while this player is on the court.,,Team
+OnCourt_Opp_FT_Att,int,8,Opponent free throws attempted while this player is on the court.,,Team
+OnCourt_Opp_3p_Made,int,4,Opponent 3pt field goals made while this player is on court.,,Team
+OnCourt_Opp_3p_Att,int,12,Opponent 3pt field goals attempted while this player is on court.,,Team
+OnCourt_Opp_FGA,int,34,Opponent field goal attempts while this player is on court.,,Team
+OnCourt_Opp_Points,int,39,Opponent points scored while this player is on court.,,Team
+OnCourt_For_OREB_FGA,int,16,Team Offensive Rebounds off field goals when player was on the court,,Team
+OnCourt_For_DREB_FGA,int,17,Team defensive rebounds off field goals when player was on the court,,Team
+OnCourt_Team_FT_Made,int,6,Team free throws made while this player is on court.,,Team
+OnCourt_Team_FT_Att,int,8,Team free throws attempted while this player is on court.,,Team
+OnCourt_Team_3p_Made,int,2,Team 3pt field goals made while this player is on court.,,Team
+OnCourt_Team_3p_Att,int,8,Team 3pt field goals attempted while this player is on court.,,Team
+OnCourt_Team_Points,int,36,Team points scored while this player is on court.,,Team
+Plus_Minus,int,-3,Oncourt scoring margin: `OnCourt_Team_Points – OnCourt_Opp_Points` while the player is on the floor.,,Team
+season,int,1997,Season year for this row (matches `Year` in your sample).,,N/A
+h_tm_id,int,1610612747,Home team ID (NBA franchise id).,,N/A
+v_tm_id,int,1610612737,Visitor team ID.,,N/A
+home_fl,int,1,"1 if the row’s team is the home team, 0 otherwise.",,N/A
+check_season,int,0,Internal check flag for season alignment / data QC (1/0).,,N/A
