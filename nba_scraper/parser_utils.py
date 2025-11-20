@@ -125,11 +125,16 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
         team_id = _safe_team(row.get("team_id"))
         event_type = _safe_team(row.get("eventmsgtype"))
         family = row.get("family")
+        sub_text = str(row.get("subfamily") or "").lower()
 
         shot_made = _safe_team(row.get("shot_made"))
         ft_n_val = _safe_team(row.get("ft_n"))
         ft_m_val = _safe_team(row.get("ft_m"))
         is_d_reb = _safe_team(row.get("is_d_rebound"))
+
+        last_ft_flag = row.get("is_last_ft")
+        has_last_ft_flag = last_ft_flag is not None and not pd.isna(last_ft_flag)
+        is_last_ft_flagged = bool(_safe_team(last_ft_flag) == 1) if has_last_ft_flag else False
 
         # 1) Heuristic "hint" based on the event itself.
         hint = 0
@@ -155,7 +160,18 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
             and ft_n_val == ft_m_val
             and shot_made == 1
         ):
+            technical_like = any(
+                token in sub_text for token in ("technical", "clear path", "illegal defense")
+            )
             raw_val = row.get("possession_after")
+            if technical_like or (has_last_ft_flag and not is_last_ft_flagged):
+                if pd.notna(raw_val) and raw_val not in ("", 0):
+                    try:
+                        return int(raw_val)
+                    except (TypeError, ValueError):
+                        return 0
+                return 0
+
             if pd.isna(raw_val) or raw_val in ("", 0):
                 hint = _opponent(team_id)
 
