@@ -226,7 +226,13 @@ join keys; they do **not** represent personIds. Filter on `Player_Team !=
 Column definitions, expected dtypes, and glossary descriptions for this output
 are maintained in `nba_scraper/stats/glossary_schema.csv`. Treat this CSV as
 read-only and load it via `nba_scraper.stats.load_glossary_schema()` when you
-need the authoritative schema inside code or tests.
+need the authoritative schema inside code or tests. The schema now also
+includes helper metadata:
+
+* `Player_or_OnCourt` clarifies whether a stat measures individual production
+  or contextual team outcomes while the player is on the floor.
+* `Numerator` and `Denominator` provide the intended calculation inputs (or 1
+  for counting stats) to make downstream derivations consistent.
 
 # Maintainer & contact
 
