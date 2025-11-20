@@ -1493,7 +1493,7 @@ def build_player_box(
 
     merged["Pace"] = np.where(
         merged["Minutes"] > 0,
-        (merged["POSS_OFF"] + merged["POSS_DEF"]) / merged["Minutes"] * 48.0,
+        (merged["POSS_OFF"] + merged["POSS_DEF"]) / merged["Minutes"] * 24.0,
         0.0,
     )
 
