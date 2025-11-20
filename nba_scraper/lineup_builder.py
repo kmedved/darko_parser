@@ -145,10 +145,10 @@ def _seed_lineup(starters: List[int]) -> List[Optional[int]]:
     valid_starters: List[int] = []
     for pid in starters[:5]:
         pid_int = _safe_int(pid)
-        if pid_int is not None:
+        if pid_int is not None and pid_int > 0:
             valid_starters.append(pid_int)
 
-    if len(valid_starters) < 5:
+    if not valid_starters:
         # Avoid half-seeding a lineup; fall back to unknown slots so runtime
         # events determine on-court players.
         return lineup

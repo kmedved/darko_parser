@@ -125,15 +125,19 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
         team_id = _safe_team(row.get("team_id"))
         event_type = _safe_team(row.get("eventmsgtype"))
         family = row.get("family")
-        sub_text = str(row.get("subfamily") or "").lower()
+        sub_text = str(
+            row.get("subfamily_de")
+            or row.get("event_sub_family")
+            or row.get("event_subfamily")
+            or row.get("subfamily")
+            or ""
+        ).lower()
 
         shot_made = _safe_team(row.get("shot_made"))
         ft_n_val = _safe_team(row.get("ft_n"))
         ft_m_val = _safe_team(row.get("ft_m"))
         is_d_reb = _safe_team(row.get("is_d_rebound"))
         team_reb = _safe_team(row.get("team_rebound"))
-        subfamily_lower = str(row.get("subfamily") or "").lower()
-        is_technical_ft = "technical" in subfamily_lower
 
         last_ft_flag = row.get("is_last_ft")
         has_last_ft_flag = last_ft_flag is not None and not pd.isna(last_ft_flag)
@@ -162,7 +166,6 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
             and ft_m_val != 0
             and ft_n_val == ft_m_val
             and shot_made == 1
-            and not is_technical_ft
         ):
             technical_like = any(
                 token in sub_text for token in ("technical", "clear path", "illegal defense")
