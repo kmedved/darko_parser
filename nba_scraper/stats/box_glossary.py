@@ -1813,16 +1813,17 @@ def build_player_box(
 
     merged["Position"] = merged["Position"].fillna("").astype(str)
 
-    merged["Player_Team"] = np.where(
+    player_code = np.where(
         merged["FullName"].notna() & merged["NbaDotComID"].notna(),
-        merged["FullName"].astype(str) + " " + merged["NbaDotComID"].astype(int).astype(str),
+        merged["FullName"].astype(str)
+        + " "
+        + merged["NbaDotComID"].astype(int).astype(str),
         merged["FullName"].astype(str),
     )
-    merged["Player_Code"] = np.where(
-        merged["FullName"].notna() & merged["NbaDotComID"].notna(),
-        merged["FullName"].astype(str) + " " + merged["NbaDotComID"].astype(int).astype(str),
-        merged["FullName"].astype(str),
-    )
+    # Player_Code is the glossary-aligned label; Player_Team remains as a
+    # backwards-compatible alias for consumers expecting the legacy name.
+    merged["Player_Code"] = player_code
+    merged["Player_Team"] = player_code
 
     # --- FT and 3P aliases ---
     merged["FT%"] = merged["FT_pct"]
