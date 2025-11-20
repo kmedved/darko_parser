@@ -535,6 +535,7 @@ def _valid_player_id(pid: Any) -> bool:
 def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     counts: Dict[tuple, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    last_miss_type: Dict[int, Optional[str]] = {}
 
     for _, row in df.iterrows():
         player_id_raw = row.get("player1_id")
@@ -551,6 +552,18 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
             team_id = row.get("player1_team_id")
         team_id = _coerce_id_scalar(team_id)
         game_id = _coerce_id_scalar(row.get("game_id"))
+
+        is_missed_fg = row.get("is_fg_attempt") and not bool(row.get("is_fg_make"))
+        is_missed_last_ft = (
+            row.get("is_ft")
+            and not bool(row.get("is_ft_make"))
+            and row.get("is_last_ft", False)
+        )
+
+        if is_missed_fg:
+            last_miss_type[game_id] = "fg"
+        elif is_missed_last_ft:
+            last_miss_type[game_id] = "ft"
 
         # If valid player, use their ID. If invalid (Team event), use 0.
         key = (game_id, team_id, player_id)
@@ -652,6 +665,12 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
 
         if row.get("is_o_rebound") == 1 and is_valid_player:
             _increment_count(counts[key], "OREB")
+            miss_type = last_miss_type.get(game_id)
+            if miss_type == "fg":
+                _increment_count(counts[key], "OREB_FGA")
+            elif miss_type == "ft":
+                _increment_count(counts[key], "OREB_FT")
+            last_miss_type[game_id] = None
         if row.get("is_d_rebound") == 1 and is_valid_player:
             _increment_count(counts[key], "DREB")
 
@@ -1278,6 +1297,8 @@ def build_player_box(
         "FGM",
         "POSS",
         "OREB",
+        "OREB_FGA",
+        "OREB_FT",
         "DREB",
         "PF",
         "BLK",
@@ -1310,6 +1331,8 @@ def build_player_box(
         "FLAGRANT",
         "PTS",
         "OREB",
+        "OREB_FGA",
+        "OREB_FT",
         "AST",
         "PF",
         "TOV",
@@ -1373,6 +1396,13 @@ def build_player_box(
     new_cols["FTR_Att"] = np.where(merged["FGA"] > 0, merged["FTA"] / merged["FGA"], 0.0)
     new_cols["FTR_Made"] = np.where(merged["FGA"] > 0, merged["FTM"] / merged["FGA"], 0.0)
 
+    oreb_fga_counts = pd.to_numeric(
+        merged.get("OREB_FGA", merged.get("OREB", 0)), errors="coerce"
+    ).fillna(0)
+    oreb_ft_counts = pd.to_numeric(
+        merged.get("OREB_FT", merged.get("OREB", 0)), errors="coerce"
+    ).fillna(0)
+
     new_cols["ORBpct"] = np.where(
         merged["OnCourt_For_OREB_Total"] > 0,
         merged.get("OREB", 0) / merged["OnCourt_For_OREB_Total"],
@@ -1380,22 +1410,22 @@ def build_player_box(
     )
     new_cols["OREBPct_FGA"] = np.where(
         merged.get("OnCourt_Team_FGA", 0) > 0,
-        merged.get("OREB", 0) / merged.get("OnCourt_Team_FGA", 0),
+        oreb_fga_counts / merged.get("OnCourt_Team_FGA", 0),
         0.0,
     )
     new_cols["OREB_FGA_100p"] = np.where(
         merged["POSS_OFF"] > 0,
-        merged.get("OREB", 0) / merged["POSS_OFF"] * 100.0,
+        oreb_fga_counts / merged["POSS_OFF"] * 100.0,
         0.0,
     )
     new_cols["OREBPct_FT"] = np.where(
         merged.get("OnCourt_Team_FT_Att", 0) > 0,
-        merged.get("OREB", 0) / merged.get("OnCourt_Team_FT_Att", 0),
+        oreb_ft_counts / merged.get("OnCourt_Team_FT_Att", 0),
         0.0,
     )
     new_cols["OREB_FT_100p"] = np.where(
         merged["POSS_OFF"] > 0,
-        merged.get("OREB", 0) / merged["POSS_OFF"] * 100.0,
+        oreb_ft_counts / merged["POSS_OFF"] * 100.0,
         0.0,
     )
     new_cols["DRBpct"] = np.where(
@@ -1637,15 +1667,19 @@ def build_player_box(
     )
 
     # --- OREB-based rates relative to team FGA / FT ---
-    merged["OREB_FGA"] = np.where(
-        merged.get("OnCourt_Team_FGA", 0) > 0,
-        merged["OREB"] / merged["OnCourt_Team_FGA"] * 100.0,
-        0.0,
+    merged["OREB_FGA"] = (
+        pd.to_numeric(merged.get("OREB_FGA", merged.get("OREB", 0)), errors="coerce")
+        .fillna(0)
+        .astype(int)
     )
-    merged["OREB_FT"] = np.where(
-        merged.get("OnCourt_Team_FT_Att", 0) > 0,
-        merged["OREB"] / merged["OnCourt_Team_FT_Att"] * 100.0,
-        0.0,
+    merged["OREB_FT"] = (
+        pd.to_numeric(
+            merged.get("OREB_FT", merged.get("OREB", 0) - merged["OREB_FGA"]),
+            errors="coerce",
+        )
+        .fillna(0)
+        .clip(lower=0)
+        .astype(int)
     )
 
     # --- Global unassisted shooting aliases ---

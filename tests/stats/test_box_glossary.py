@@ -150,6 +150,104 @@ def test_accumulate_player_counts_assist_fallback_same_team_only():
     assert (1, 40) not in by_player
 
 
+def test_offensive_rebounds_split_between_fg_and_ft_sources():
+    pbp = pd.DataFrame(
+        [
+            {
+                "game_id": 1,
+                "team_id": 1,
+                "player1_id": 10,
+                "player1_team_id": 1,
+                "family": "shot",
+                "is_fg_attempt": True,
+                "is_fg_make": False,
+                "is_three": False,
+                "points_made": 0,
+            },
+            {
+                "game_id": 1,
+                "team_id": 1,
+                "player1_id": 20,
+                "player1_team_id": 1,
+                "family": "rebound",
+                "is_o_rebound": 1,
+            },
+            {
+                "game_id": 1,
+                "team_id": 1,
+                "player1_id": 10,
+                "player1_team_id": 1,
+                "family": "free_throw",
+                "is_ft": True,
+                "is_ft_make": False,
+                "is_last_ft": True,
+                "points_made": 0,
+            },
+            {
+                "game_id": 1,
+                "team_id": 1,
+                "player1_id": 10,
+                "player1_team_id": 1,
+                "family": "rebound",
+                "is_o_rebound": 1,
+            },
+        ]
+    )
+
+    counts = box_glossary.accumulate_player_counts(pbp)
+    by_player = counts.set_index("player_id")
+
+    assert by_player.loc[20, "OREB"] == 1
+    assert by_player.loc[20, "OREB_FGA"] == 1
+    assert by_player.loc[20].get("OREB_FT", 0) == 0
+
+    assert by_player.loc[10, "OREB"] == 1
+    assert by_player.loc[10, "OREB_FT"] == 1
+    assert by_player.loc[10].get("OREB_FGA", 0) == 0
+
+    exposures = pd.DataFrame(
+        [
+            {
+                "game_id": 1,
+                "team_id": 1,
+                "player_id": pid,
+                "POSS_OFF": 10,
+                "POSS_DEF": 0,
+                "Minutes": 5.0,
+                "OnCourt_Team_FGA": 8,
+                "OnCourt_Team_FT_Att": 2,
+                "OnCourt_Team_Points": 0,
+                "OnCourt_Opp_Points": 0,
+                "OnCourt_For_OREB_Total": 0,
+                "OnCourt_For_DREB_Total": 0,
+            }
+            for pid in (10, 20)
+        ]
+    )
+
+    base_df = pd.DataFrame(
+        {
+            "game_id": [1],
+            "home_team_id": [1],
+            "away_team_id": [2],
+            "home_team_abbrev": ["HOM"],
+            "away_team_abbrev": ["AWY"],
+        }
+    )
+    box = box_glossary.build_player_box(base_df, counts, exposures)
+    box_by_pid = box.set_index("player_id")
+
+    assert box_by_pid.loc[20, "OREB_FGA"] == 1
+    assert box_by_pid.loc[20, "OREB_FT"] == 0
+    assert np.isclose(box_by_pid.loc[20, "OREB_FGA_100p"], 10.0)
+    assert np.isclose(box_by_pid.loc[20, "OREB_FT_100p"], 0.0)
+
+    assert box_by_pid.loc[10, "OREB_FT"] == 1
+    assert box_by_pid.loc[10, "OREB_FGA"] == 0
+    assert np.isclose(box_by_pid.loc[10, "OREB_FT_100p"], 10.0)
+    assert np.isclose(box_by_pid.loc[10, "OREB_FGA_100p"], 0.0)
+
+
 def test_build_player_box_includes_dnp_players_when_meta_provided():
     """
     When player_game_meta is provided (and outer-merged), build_player_box should
