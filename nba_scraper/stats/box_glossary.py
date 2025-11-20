@@ -503,6 +503,14 @@ def annotate_events(df: pd.DataFrame) -> pd.DataFrame:
     tech_ft_mask = df["is_ft"] & sub_lower.str.contains("technical")
     df["is_last_ft"] = df["is_last_ft"] & ~tech_ft_mask
 
+    prev_fg_attempt = df["is_fg_attempt"].shift(1).fillna(False).astype(bool)
+    prev_fg_make = df["is_fg_make"].shift(1).fillna(False).astype(bool)
+    df["prev_is_missed_fg"] = prev_fg_attempt & ~prev_fg_make
+
+    prev_last_ft = df["is_last_ft"].shift(1).fillna(False).astype(bool)
+    prev_ft_make = df["is_ft_make"].shift(1).fillna(False).astype(bool)
+    df["prev_is_missed_ft"] = prev_last_ft & ~prev_ft_make
+
     return df
 
 
@@ -651,9 +659,21 @@ def accumulate_player_counts(df: pd.DataFrame) -> pd.DataFrame:
             _increment_count(counts[key], "PTS", row.get("points_made", 0))
 
         if row.get("is_o_rebound") == 1 and is_valid_player:
+            prev_ft_flag = row.get("prev_is_missed_ft")
+            prev_is_missed_ft = bool(prev_ft_flag) if not pd.isna(prev_ft_flag) else False
             _increment_count(counts[key], "OREB")
+            if prev_is_missed_ft:
+                _increment_count(counts[key], "OREB_FT")
+            else:
+                _increment_count(counts[key], "OREB_FGA")
         if row.get("is_d_rebound") == 1 and is_valid_player:
+            prev_ft_flag = row.get("prev_is_missed_ft")
+            prev_is_missed_ft = bool(prev_ft_flag) if not pd.isna(prev_ft_flag) else False
             _increment_count(counts[key], "DREB")
+            if prev_is_missed_ft:
+                _increment_count(counts[key], "DRB_FT")
+            else:
+                _increment_count(counts[key], "DREB_FGA")
 
         if row.get("family") == "turnover":
             _increment_count(counts[key], "TOV")
@@ -931,7 +951,12 @@ def compute_on_court_exposures(pbp: PbP, df: pd.DataFrame) -> pd.DataFrame:
                         _get_team_for_player(pid, shoot_team),
                         _coerce_id_scalar(pid),
                     )
-                    _increment_count(exposures[key], "OnCourt_For_OREB_Total")
+                    if is_missed_fg:
+                        _increment_count(exposures[key], "OnCourt_For_OREB_FGA")
+                        _increment_count(exposures[key], "OnCourt_For_OREB_Total")
+                    if is_missed_last_ft:
+                        _increment_count(exposures[key], "OnCourt_For_OREB_FT")
+                        _increment_count(exposures[key], "OnCourt_For_OREB_Total")
 
             # Defensive rebound opportunities for the defending team
             opp_team = (
@@ -946,7 +971,12 @@ def compute_on_court_exposures(pbp: PbP, df: pd.DataFrame) -> pd.DataFrame:
                         _get_team_for_player(pid, opp_team),
                         _coerce_id_scalar(pid),
                     )
-                    _increment_count(exposures[key], "OnCourt_For_DREB_Total")
+                    if is_missed_fg:
+                        _increment_count(exposures[key], "OnCourt_For_DREB_FGA")
+                        _increment_count(exposures[key], "OnCourt_For_DREB_Total")
+                    if is_missed_last_ft:
+                        _increment_count(exposures[key], "OnCourt_For_DREB_FT")
+                        _increment_count(exposures[key], "OnCourt_For_DREB_Total")
 
     poss_df = pbp._build_possessions(df, include_event_agg=True)
     for _, poss in poss_df.iterrows():
@@ -1045,9 +1075,15 @@ def compute_on_court_exposures(pbp: PbP, df: pd.DataFrame) -> pd.DataFrame:
         vals.setdefault("TM_BLK_OnCourt", 0)
         vals.setdefault("OnCourt_Opp_FGM", 0)
         vals.setdefault("OnCourt_Opp_FGA", 0)
+        vals.setdefault("OnCourt_For_OREB_FGA", 0)
+        vals.setdefault("OnCourt_For_OREB_FT", 0)
         vals.setdefault("OnCourt_For_OREB_Total", 0)
+        vals.setdefault("OnCourt_For_DREB_FGA", 0)
+        vals.setdefault("OnCourt_For_DREB_FT", 0)
         vals.setdefault("OnCourt_For_DREB_Total", 0)
         vals.setdefault("OnCourt_Opp_2p_Att", 0)
+        vals["OnCourt_For_OREB_Total"] = vals.get("OnCourt_For_OREB_FGA", 0) + vals.get("OnCourt_For_OREB_FT", 0)
+        vals["OnCourt_For_DREB_Total"] = vals.get("OnCourt_For_DREB_FGA", 0) + vals.get("OnCourt_For_DREB_FT", 0)
         exposure_rows.append({"game_id": game_id, "team_id": team_id, "player_id": player_id, **vals})
 
     exposure_df = pd.DataFrame(exposure_rows)
@@ -1260,7 +1296,11 @@ def build_player_box(
         "AST",
         "POSS_OFF",
         "POSS_DEF",
+        "OnCourt_For_OREB_FGA",
+        "OnCourt_For_OREB_FT",
         "OnCourt_For_OREB_Total",
+        "OnCourt_For_DREB_FGA",
+        "OnCourt_For_DREB_FT",
         "OnCourt_For_DREB_Total",
         "OnCourt_Opp_2p_Att",
         "OnCourt_Team_FGM",
@@ -1278,7 +1318,10 @@ def build_player_box(
         "FGM",
         "POSS",
         "OREB",
+        "OREB_FGA",
+        "OREB_FT",
         "DREB",
+        "DREB_FGA",
         "PF",
         "BLK",
         "BLK_Team",
@@ -1310,6 +1353,8 @@ def build_player_box(
         "FLAGRANT",
         "PTS",
         "OREB",
+        "OREB_FGA",
+        "OREB_FT",
         "AST",
         "PF",
         "TOV",
@@ -1324,6 +1369,7 @@ def build_player_box(
         "ThreePM",
         "ThreePA",
         "DREB",
+        "DREB_FGA",
         "PF_DRAWN",
         "CHRG",
         "Goaltends",
@@ -1346,6 +1392,13 @@ def build_player_box(
     for col in ["ThreePA_UNAST", "ThreePM_UNAST", "FGA_UNAST", "FGM_UNAST"]:
         if col not in merged.columns:
             merged[col] = 0
+
+    merged["OnCourt_For_OREB_Total"] = merged.get("OnCourt_For_OREB_FGA", 0) + merged.get(
+        "OnCourt_For_OREB_FT", 0
+    )
+    merged["OnCourt_For_DREB_Total"] = merged.get("OnCourt_For_DREB_FGA", 0) + merged.get(
+        "OnCourt_For_DREB_FT", 0
+    )
 
     # Build simple derived columns in a batch to reduce fragmentation
     new_cols = {}
@@ -1379,23 +1432,23 @@ def build_player_box(
         0.0,
     )
     new_cols["OREBPct_FGA"] = np.where(
-        merged.get("OnCourt_Team_FGA", 0) > 0,
-        merged.get("OREB", 0) / merged.get("OnCourt_Team_FGA", 0),
+        merged.get("OnCourt_For_OREB_FGA", 0) > 0,
+        merged.get("OREB_FGA", 0) / merged.get("OnCourt_For_OREB_FGA", 0),
         0.0,
     )
     new_cols["OREB_FGA_100p"] = np.where(
         merged["POSS_OFF"] > 0,
-        merged.get("OREB", 0) / merged["POSS_OFF"] * 100.0,
+        merged.get("OREB_FGA", 0) / merged["POSS_OFF"] * 100.0,
         0.0,
     )
     new_cols["OREBPct_FT"] = np.where(
-        merged.get("OnCourt_Team_FT_Att", 0) > 0,
-        merged.get("OREB", 0) / merged.get("OnCourt_Team_FT_Att", 0),
+        merged.get("OnCourt_For_OREB_FT", 0) > 0,
+        merged.get("OREB_FT", 0) / merged.get("OnCourt_For_OREB_FT", 0),
         0.0,
     )
     new_cols["OREB_FT_100p"] = np.where(
         merged["POSS_OFF"] > 0,
-        merged.get("OREB", 0) / merged["POSS_OFF"] * 100.0,
+        merged.get("OREB_FT", 0) / merged["POSS_OFF"] * 100.0,
         0.0,
     )
     new_cols["DRBpct"] = np.where(
@@ -1410,9 +1463,24 @@ def build_player_box(
         axis=1,
     )
 
-    # Alias rebound opportunity totals to glossary column names
-    merged["OnCourt_For_OREB_FGA"] = merged.get("OnCourt_For_OREB_Total", 0)
-    merged["OnCourt_For_DREB_FGA"] = merged.get("OnCourt_For_DREB_Total", 0)
+    merged["OnCourt_For_OREB_FGA"] = pd.to_numeric(
+        merged.get("OnCourt_For_OREB_FGA", 0), errors="coerce"
+    ).fillna(0)
+    merged["OnCourt_For_OREB_FT"] = pd.to_numeric(
+        merged.get("OnCourt_For_OREB_FT", 0), errors="coerce"
+    ).fillna(0)
+    merged["OnCourt_For_DREB_FGA"] = pd.to_numeric(
+        merged.get("OnCourt_For_DREB_FGA", 0), errors="coerce"
+    ).fillna(0)
+    merged["OnCourt_For_DREB_FT"] = pd.to_numeric(
+        merged.get("OnCourt_For_DREB_FT", 0), errors="coerce"
+    ).fillna(0)
+    merged["OnCourt_For_OREB_Total"] = (
+        merged["OnCourt_For_OREB_FGA"] + merged["OnCourt_For_OREB_FT"]
+    )
+    merged["OnCourt_For_DREB_Total"] = (
+        merged["OnCourt_For_DREB_FGA"] + merged["OnCourt_For_DREB_FT"]
+    )
 
     merged["DRB"] = (
         pd.to_numeric(merged.get("DREB", 0), errors="coerce").fillna(0).astype(int)
@@ -1421,10 +1489,8 @@ def build_player_box(
         pd.to_numeric(merged.get("DRB_FT", 0), errors="coerce").fillna(0).astype(int)
     )
     merged["DREB_FGA"] = (
-        pd.to_numeric(merged.get("DREB", merged["DRB"]), errors="coerce").fillna(0)
-        - merged["DRB_FT"]
-    ).clip(lower=0)
-    merged["DREB_FGA"] = merged["DREB_FGA"].astype(int)
+        pd.to_numeric(merged.get("DREB_FGA", 0), errors="coerce").fillna(0).astype(int)
+    )
 
     merged["DRBPct"] = np.where(
         merged.get("OnCourt_For_DREB_Total", 0) > 0,
@@ -1433,19 +1499,23 @@ def build_player_box(
     )
     merged["DRBPct_FGA"] = np.where(
         merged.get("OnCourt_For_DREB_FGA", 0) > 0,
-        merged["DRB"] / merged.get("OnCourt_For_DREB_FGA", 0),
+        merged.get("DREB_FGA", 0) / merged.get("OnCourt_For_DREB_FGA", 0),
         0.0,
     )
     merged["DRBPct_FT"] = np.where(
-        merged.get("OnCourt_Opp_FT_Att", 0) > 0,
-        merged["DRB"] / merged.get("OnCourt_Opp_FT_Att", 0),
+        merged.get("OnCourt_For_DREB_FT", 0) > 0,
+        merged.get("DRB_FT", 0) / merged.get("OnCourt_For_DREB_FT", 0),
         0.0,
     )
     merged["DRB_FGA_100p"] = np.where(
-        merged["POSS_DEF"] > 0, merged["DRB"] / merged["POSS_DEF"] * 100.0, 0.0
+        merged["POSS_DEF"] > 0,
+        merged.get("DREB_FGA", 0) / merged["POSS_DEF"] * 100.0,
+        0.0,
     )
     merged["DRB_FT_100p"] = np.where(
-        merged["POSS_DEF"] > 0, merged["DRB_FT"] / merged["POSS_DEF"] * 100.0, 0.0
+        merged["POSS_DEF"] > 0,
+        merged.get("DRB_FT", 0) / merged["POSS_DEF"] * 100.0,
+        0.0,
     )
 
     teammate_fgm = np.maximum(
@@ -1493,7 +1563,7 @@ def build_player_box(
 
     merged["Pace"] = np.where(
         merged["Minutes"] > 0,
-        (merged["POSS_OFF"] + merged["POSS_DEF"]) / merged["Minutes"] * 48.0,
+        (merged["POSS_OFF"] + merged["POSS_DEF"]) / (2 * merged["Minutes"]) * 48.0,
         0.0,
     )
 
@@ -1619,6 +1689,11 @@ def build_player_box(
         merged["FullName"].astype(str) + " " + merged["NbaDotComID"].astype(int).astype(str),
         merged["FullName"].astype(str),
     )
+    merged["Player_Code"] = np.where(
+        merged["FullName"].notna() & merged["NbaDotComID"].notna(),
+        merged["FullName"].astype(str) + " " + merged["NbaDotComID"].astype(int).astype(str),
+        merged["FullName"].astype(str),
+    )
 
     # --- FT and 3P aliases ---
     merged["FT%"] = merged["FT_pct"]
@@ -1636,17 +1711,8 @@ def build_player_box(
         merged["POSS_OFF"] > 0, merged["AndOnes"] / merged["POSS_OFF"] * 100.0, 0.0
     )
 
-    # --- OREB-based rates relative to team FGA / FT ---
-    merged["OREB_FGA"] = np.where(
-        merged.get("OnCourt_Team_FGA", 0) > 0,
-        merged["OREB"] / merged["OnCourt_Team_FGA"] * 100.0,
-        0.0,
-    )
-    merged["OREB_FT"] = np.where(
-        merged.get("OnCourt_Team_FT_Att", 0) > 0,
-        merged["OREB"] / merged["OnCourt_Team_FT_Att"] * 100.0,
-        0.0,
-    )
+    merged["OREB_FGA"] = merged.get("OREB_FGA", 0)
+    merged["OREB_FT"] = merged.get("OREB_FT", 0)
 
     # --- Global unassisted shooting aliases ---
     merged["FGM_UNAST"] = merged.get("FGM_UNAST", 0)
@@ -1809,6 +1875,7 @@ def append_team_totals(box_df: pd.DataFrame) -> pd.DataFrame:
     team_totals["player_id"] = team_totals["team_id"]
     team_totals["FullName"] = "TOTAL"
     team_totals["Player_Team"] = "TOTAL"
+    team_totals["Player_Code"] = "TOTAL"
     team_totals["G"] = 1  # team played the game
     team_totals["Inactive"] = 0
     team_totals["DNP"] = 0
@@ -1836,10 +1903,10 @@ def append_team_totals(box_df: pd.DataFrame) -> pd.DataFrame:
     )
     team_totals["POSS"] = team_totals["POSS_OFF"] + team_totals["POSS_DEF"]
 
-    # Use offensive possessions for team pace so we don't double-count.
+    # Use combined possessions for team pace, halved to match player-level pace.
     team_totals["Pace"] = np.where(
         team_totals["Minutes"] > 0,
-        team_totals["POSS_OFF"] / team_totals["Minutes"] * 48.0,
+        (team_totals["POSS_OFF"] + team_totals["POSS_DEF"]) / (2 * team_totals["Minutes"]) * 48.0,
         0.0,
     )
 
@@ -1863,6 +1930,64 @@ def append_team_totals(box_df: pd.DataFrame) -> pd.DataFrame:
             0.0,
         )
         team_totals["3PPct"] = team_totals["ThreeP_pct"]
+
+    team_totals["OnCourt_For_OREB_Total"] = team_totals.get("OnCourt_For_OREB_FGA", 0) + team_totals.get(
+        "OnCourt_For_OREB_FT", 0
+    )
+    team_totals["OnCourt_For_DREB_Total"] = team_totals.get("OnCourt_For_DREB_FGA", 0) + team_totals.get(
+        "OnCourt_For_DREB_FT", 0
+    )
+    team_totals["DRB"] = team_totals.get("DREB", 0)
+    team_totals["ORBpct"] = np.where(
+        team_totals["OnCourt_For_OREB_Total"] > 0,
+        team_totals.get("OREB", 0) / team_totals["OnCourt_For_OREB_Total"],
+        0.0,
+    )
+    team_totals["OREBPct_FGA"] = np.where(
+        team_totals.get("OnCourt_For_OREB_FGA", 0) > 0,
+        team_totals.get("OREB_FGA", 0) / team_totals.get("OnCourt_For_OREB_FGA", 0),
+        0.0,
+    )
+    team_totals["OREBPct_FT"] = np.where(
+        team_totals.get("OnCourt_For_OREB_FT", 0) > 0,
+        team_totals.get("OREB_FT", 0) / team_totals.get("OnCourt_For_OREB_FT", 0),
+        0.0,
+    )
+    team_totals["OREB_FGA_100p"] = np.where(
+        team_totals["POSS_OFF"] > 0,
+        team_totals.get("OREB_FGA", 0) / team_totals["POSS_OFF"] * 100.0,
+        0.0,
+    )
+    team_totals["OREB_FT_100p"] = np.where(
+        team_totals["POSS_OFF"] > 0,
+        team_totals.get("OREB_FT", 0) / team_totals["POSS_OFF"] * 100.0,
+        0.0,
+    )
+    team_totals["DRBPct"] = np.where(
+        team_totals["OnCourt_For_DREB_Total"] > 0,
+        team_totals.get("DRB", 0) / team_totals["OnCourt_For_DREB_Total"],
+        0.0,
+    )
+    team_totals["DRBPct_FGA"] = np.where(
+        team_totals.get("OnCourt_For_DREB_FGA", 0) > 0,
+        team_totals.get("DREB_FGA", 0) / team_totals.get("OnCourt_For_DREB_FGA", 0),
+        0.0,
+    )
+    team_totals["DRBPct_FT"] = np.where(
+        team_totals.get("OnCourt_For_DREB_FT", 0) > 0,
+        team_totals.get("DRB_FT", 0) / team_totals.get("OnCourt_For_DREB_FT", 0),
+        0.0,
+    )
+    team_totals["DRB_FGA_100p"] = np.where(
+        team_totals["POSS_DEF"] > 0,
+        team_totals.get("DREB_FGA", 0) / team_totals["POSS_DEF"] * 100.0,
+        0.0,
+    )
+    team_totals["DRB_FT_100p"] = np.where(
+        team_totals["POSS_DEF"] > 0,
+        team_totals.get("DRB_FT", 0) / team_totals["POSS_DEF"] * 100.0,
+        0.0,
+    )
 
     team_totals["PTS_100p"] = np.where(
         team_totals["POSS_OFF"] > 0,
