@@ -131,6 +131,7 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
         ft_n_val = _safe_team(row.get("ft_n"))
         ft_m_val = _safe_team(row.get("ft_m"))
         is_d_reb = _safe_team(row.get("is_d_rebound"))
+        is_o_reb = _safe_team(row.get("is_o_rebound"))
         team_reb = _safe_team(row.get("team_rebound"))
         subfamily_lower = str(row.get("subfamily") or "").lower()
         is_technical_ft = "technical" in subfamily_lower
@@ -150,8 +151,10 @@ def infer_possession_after(df: pd.DataFrame) -> pd.DataFrame:
         elif family in {"2pt", "3pt"} and shot_made == 1:
             hint = _opponent(team_id)
 
-        # Defensive rebound -> rebounder's team.
-        elif family == "rebound" and (is_d_reb == 1 or team_reb == 1):
+        # Any rebound -> rebounder's team. Team rebounds cover feeds that omit
+        # the offensive/defensive flag, and offensive rebounds ensure v2-only
+        # games keep possession with the offense.
+        elif family == "rebound" and (is_d_reb == 1 or is_o_reb == 1 or team_reb == 1):
             hint = team_id
 
         # Last made FT in a trip -> opponent, unless the raw feed already

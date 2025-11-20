@@ -272,6 +272,7 @@ def attach_lineups(
     # or after their partner.
     pending_out_home: List[tuple[Optional[int], int]] = []
     pending_out_away: List[tuple[Optional[int], int]] = []
+    pending_out_max_lag = 20
 
     def _resolve_team_from_row(row: pd.Series) -> Optional[int]:
         for key in ("team_id", "player1_team_id", "player2_team_id", "player3_team_id"):
@@ -282,6 +283,25 @@ def attach_lineups(
 
     for _, row in df.iterrows():
         secs_val = _safe_int(row.get("seconds_elapsed"))
+
+        trimmed_home = False
+        trimmed_away = False
+        if secs_val is not None:
+            before_home = len(pending_out_home)
+            pending_out_home[:] = [
+                (s, pid)
+                for s, pid in pending_out_home
+                if s is None or abs(secs_val - s) <= pending_out_max_lag
+            ]
+            trimmed_home = before_home > len(pending_out_home)
+
+            before_away = len(pending_out_away)
+            pending_out_away[:] = [
+                (s, pid)
+                for s, pid in pending_out_away
+                if s is None or abs(secs_val - s) <= pending_out_max_lag
+            ]
+            trimmed_away = before_away > len(pending_out_away)
         player_id = _safe_int(row.get("player1_id"))
         event_team_id = _resolve_team_from_row(row) or _safe_int(row.get("player1_team_id"))
         if event_team_id and home_id and event_team_id == home_id:
@@ -314,14 +334,17 @@ def attach_lineups(
 
             if substitution_team and home_id and substitution_team == home_id:
                 pending_out = pending_out_home
+                pending_out_trimmed = trimmed_home
                 target = home_lineup
                 candidates = home_candidates
             elif substitution_team and away_id and substitution_team == away_id:
                 pending_out = pending_out_away
+                pending_out_trimmed = trimmed_away
                 target = away_lineup
                 candidates = away_candidates
             else:
                 pending_out = None
+                pending_out_trimmed = False
                 target = None
                 candidates = None
 
@@ -336,20 +359,30 @@ def attach_lineups(
                 # CDN: "substitution" + subType "in" – only incoming player present.
                 sub_in = raw_player
                 if pending_out is not None and pending_out:
-                    # Prefer an "out" that occurred within a small temporal window
-                    # of this "in" to tolerate ordering noise in the feed. If none
-                    # match, fall back to the oldest pending out.
-                    match_idx: Optional[int] = None
-                    for idx, (out_secs, _) in enumerate(pending_out):
-                        if out_secs is None or secs_val is None:
-                            match_idx = idx
-                            break
-                        if abs(out_secs - secs_val) <= 2:
-                            match_idx = idx
-                            break
-                    if match_idx is None:
-                        match_idx = 0
-                    _, sub_out = pending_out.pop(match_idx)
+                    if secs_val is not None:
+                        pending_out[:] = [
+                            (out_secs, pid)
+                            for out_secs, pid in pending_out
+                            if out_secs is None or abs(out_secs - secs_val) <= pending_out_max_lag
+                        ]
+
+                    if pending_out:
+                        # Prefer an "out" that occurred within a small temporal window
+                        # of this "in" to tolerate ordering noise in the feed. If none
+                        # match, fall back to the oldest pending out.
+                        match_idx: Optional[int] = None
+                        for idx, (out_secs, _) in enumerate(pending_out):
+                            if out_secs is None or secs_val is None:
+                                match_idx = idx
+                                break
+                            if abs(out_secs - secs_val) <= 2:
+                                match_idx = idx
+                                break
+                        if match_idx is None:
+                            match_idx = 0
+                        _, sub_out = pending_out.pop(match_idx)
+                elif pending_out_trimmed:
+                    sub_in = None
             else:
                 # v2-style: player1_id = out, player2_id = in on the same row.
                 sub_out = raw_player
