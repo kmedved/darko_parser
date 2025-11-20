@@ -22,7 +22,7 @@ TSpct,float,0.7172,True Shooting %: `PTS / (2 * TSAttempts)`.,,Player
 PossessionsUsed,float,5,"Possessions **finished** by the player (using FGA, FTA, TOV, etc.)",,Player
 USG,float,0.1316,"Usage rate – share of team offensive possessions while on floor that end with this player’s FGA, FTA, or TOV.",,Player
 PTS,int,7,Total points scored by the player in this game.,,Player
-PTS_100p,float,30.19,Points per 100 **team offensive possessions** while this player is on the floor: `PTS / POSS_OFF * 100`.,POSS,Player
+PTS_100p,float,30.19,Points per 100 **team offensive possessions** while this player is on the floor: `PTS / POSS_OFF * 100`.,POSS_OFF,Player
 ORBpct,float,0.1316,Offensive rebound percentage – estimate of share of available offensive rebounds the player grabs while on court.,,Player
 OREB_100p,float,18.42,Offensive rebounds per 100 **team offensive possessions** while this player is on court,POSS_OFF,Player
 OREBPct_FGA,float,0,Offensive rebound percentage on field goal attempts,,Player
@@ -66,7 +66,7 @@ TM_BLK_OnCourt,int,0,Total blocks by the player’s team while this player is on t
 Goaltends_100p,float,0,Goaltending violations committed per 100 team defensive possessions while on court.,POSS_DEF,Player
 Goaltends,int,0,Goaltending violations credited to the player.,,Player
 STLpct,float,0,Steal percentage – estimate of share of opponent possessions ending in a steal by this player while on court.,,Player
-STL_100p,float,0,Steals per 100 opponent (or total) possessions while on court,POSS_DEF,Player
+STL_100p,float,0,Steals per 100 opponent  possessions while on court,POSS_DEF,Player
 STL,int,0,Steals credited to the player.,,Player
 TOVpct,float,0,Turnover percentage – estimate of turnovers per possession used by the player.,,Player
 TOV_100p,float,0,Turnovers per 100 team offensive possessions while on court.,POSS_OFF,Player
@@ -116,8 +116,8 @@ FGPct,float,0.5,Field goal percentage: `FGM / FGA`.,,Player
 3PPct,float,0.5,3 pt percentage: `3PM / 3PA`.,,Player
 FGM_UNAST,int,4,Field goals made that are unassisted.,,Player
 FGA_UNAST,int,14,Field goal attempts that are unassisted.,,Player
-FGM_UNAST_100p,float,5.26,Unassisted FGM per 100 **team possessions** while on court.,POSS_OFF,Player
-FGA_UNAST_100p,float,18.42,Unassisted FGA per 100 **team possessions** while on court.,POSS_OFF,Player
+FGM_UNAST_100p,float,5.26,Unassisted FGM per 100 **team offensive possessions** while on court.,POSS_OFF,Player
+FGA_UNAST_100p,float,18.42,Unassisted FGA per 100 **team offensive possessions** while on court.,POSS_OFF,Player
 FG_UNAST_Pct,float,0.286,**FG% on unassisted shots**: `FGM_UNAST / FGA_UNAST`.,,Player
 0_3ft_FGM_UNAST,int,2,Unassisted field goals made from 0–3 ft.,,Player
 0_3ft_FGA_UNAST,int,3,Unassisted field goal attempts from 0–3 ft.,,Player
