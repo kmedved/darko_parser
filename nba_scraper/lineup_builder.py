@@ -187,9 +187,16 @@ def _apply_substitution(
             if pid is None:
                 lineup[idx] = sub_in
                 return
-        # No available slot and no matching sub_out – we do not know who left
-        # the floor, so leave the lineup unchanged.
-        return
+        # No available slot and no matching sub_out – we still need to reflect
+        # that someone left the floor. Evict the last non-empty slot to keep a
+        # five-player lineup instead of silently dropping the substitution.
+        for idx in range(len(lineup) - 1, -1, -1):
+            if lineup[idx] is not None:
+                lineup[idx] = sub_in
+                return
+        # As an extreme fallback (all Nones), just place the sub_in in the
+        # first slot.
+        lineup[0] = sub_in
 
 
 def attach_lineups(
@@ -249,11 +256,11 @@ def attach_lineups(
     away_history: List[List[Optional[int]]] = []
 
     # For CDN-style substitutions we see separate "out" and "in" events.
-    # Maintain simple FIFO queues of pending outs for each team.
-    pending_out_home: List[int] = []
-    pending_out_away: List[int] = []
-    pending_secs_home: Optional[int] = None
-    pending_secs_away: Optional[int] = None
+    # Maintain simple FIFO queues of pending outs for each team, keeping the
+    # event time to allow loose matching when "in" rows arrive slightly before
+    # or after their partner.
+    pending_out_home: List[tuple[Optional[int], int]] = []
+    pending_out_away: List[tuple[Optional[int], int]] = []
 
     def _resolve_team_from_row(row: pd.Series) -> Optional[int]:
         for key in ("team_id", "player1_team_id", "player2_team_id", "player3_team_id"):
@@ -313,29 +320,25 @@ def attach_lineups(
             if subfamily in {"out"}:
                 # CDN: "substitution" + subType "out" – only outgoing player present.
                 if pending_out is not None and raw_player:
-                    if substitution_team == home_id:
-                        if pending_secs_home is None or pending_secs_home != secs_val:
-                            pending_out.clear()
-                        pending_secs_home = secs_val
-                    elif substitution_team == away_id:
-                        if pending_secs_away is None or pending_secs_away != secs_val:
-                            pending_out.clear()
-                        pending_secs_away = secs_val
-                    pending_out.append(raw_player)
+                    pending_out.append((secs_val, raw_player))
             elif subfamily in {"in"}:
                 # CDN: "substitution" + subType "in" – only incoming player present.
                 sub_in = raw_player
-                if pending_out is not None:
-                    if substitution_team == home_id:
-                        if pending_secs_home is None or pending_secs_home != secs_val:
-                            pending_out.clear()
-                        pending_secs_home = secs_val
-                    elif substitution_team == away_id:
-                        if pending_secs_away is None or pending_secs_away != secs_val:
-                            pending_out.clear()
-                        pending_secs_away = secs_val
-                    if pending_out:
-                        sub_out = pending_out.pop(0)
+                if pending_out is not None and pending_out:
+                    # Prefer an "out" that occurred within a small temporal window
+                    # of this "in" to tolerate ordering noise in the feed. If none
+                    # match, fall back to the oldest pending out.
+                    match_idx: Optional[int] = None
+                    for idx, (out_secs, _) in enumerate(pending_out):
+                        if out_secs is None or secs_val is None:
+                            match_idx = idx
+                            break
+                        if abs(out_secs - secs_val) <= 2:
+                            match_idx = idx
+                            break
+                    if match_idx is None:
+                        match_idx = 0
+                    _, sub_out = pending_out.pop(match_idx)
             else:
                 # v2-style: player1_id = out, player2_id = in on the same row.
                 sub_out = raw_player
