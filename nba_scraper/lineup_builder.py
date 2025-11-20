@@ -141,9 +141,20 @@ def extract_starters_from_box(box_json: Dict[str, Any]) -> Dict[str, List[int]]:
 
 def _seed_lineup(starters: List[int]) -> List[Optional[int]]:
     lineup = _init_lineup()
-    for idx, pid in enumerate(starters[:5]):
+
+    valid_starters: List[int] = []
+    for pid in starters[:5]:
         pid_int = _safe_int(pid)
-        lineup[idx] = pid_int if pid_int else None
+        if pid_int is not None:
+            valid_starters.append(pid_int)
+
+    if len(valid_starters) < 5:
+        # Avoid half-seeding a lineup; fall back to unknown slots so runtime
+        # events determine on-court players.
+        return lineup
+
+    for idx, pid in enumerate(valid_starters[:5]):
+        lineup[idx] = pid
     return lineup
 
 

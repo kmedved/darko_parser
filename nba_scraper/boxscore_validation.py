@@ -48,7 +48,7 @@ def _team_totals_from_pbp(df: pd.DataFrame) -> Dict[int, Dict[str, int]]:
         return {}
 
     shots_mask = df["family"].isin(["2pt", "3pt"])
-    ft_mask = df["family"] == "freethrow"
+    ft_mask = df["family"].isin(["freethrow", "free_throw"])
     shots = df[shots_mask]
     freethrows = df[ft_mask]
 

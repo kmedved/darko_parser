@@ -49,7 +49,7 @@ ZONE_BINS: List[Tuple[float, float, str]] = [
     (3.0, 9.0, "4_9"),
     (9.0, 17.0, "10_17"),
     (17.0, 23.0, "18_23"),
-    (23.0, 100.0, "18_23"),
+    (23.0, 100.0, "24_plus"),
 ]
 
 
@@ -228,7 +228,8 @@ def _vectorized_shot_zone(df: pd.DataFrame) -> pd.Series:
     zones[dist_mask & (shot_distance <= 3.0)] = "0_3"
     zones[dist_mask & (shot_distance > 3.0) & (shot_distance <= 9.0)] = "4_9"
     zones[dist_mask & (shot_distance > 9.0) & (shot_distance <= 17.0)] = "10_17"
-    zones[dist_mask & (shot_distance > 17.0)] = "18_23"
+    zones[dist_mask & (shot_distance > 17.0) & (shot_distance <= 23.0)] = "18_23"
+    zones[dist_mask & (shot_distance > 23.0)] = "24_plus"
 
     # Fallback to area text where distance-based zone is still missing
     fallback_mask = zones.isna()
